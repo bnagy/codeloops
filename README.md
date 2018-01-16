@@ -1,15 +1,15 @@
-# octonions
+# codeloops
 
 ## About
 
-`octonions` is initial maths research code to implement octonion multiplication as a twisted group algebra. Literature [here](https://arxiv.org/pdf/1702.05705.pdf). This is undergraduate code with no practical relevance for anyone except me.
+`codeloops` is initial maths research code to implement code loops as extensions of doubly even binary codes.  Initial goal is to build the loop over the Hamming[8,4] code and then Parker loop over the Golay code. This is undergraduate code with no practical relevance for anyone except me.
 
 ## Installation
 
 You should follow the [instructions](https://golang.org/doc/install) to
 install Go, if you haven't already done so. Then:
 ```bash
-$ go get github.com/bnagy/octonions
+$ go get github.com/bnagy/codeloops
 ```
 
 ## Usage
