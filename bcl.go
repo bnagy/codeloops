@@ -107,6 +107,21 @@ func (cl *CL) Size() int {
 	return int(cl.size)
 }
 
+func (cl *CL) LoopElems() (cles []CLElem) {
+	// We put all the positive elements first. That way, if we only want the
+	// loop vectors (and not the signs) we can just pull out the first half of
+	// them elems and ignore cle.sgn
+	for i := uint(0); i < cl.size; i++ {
+		ipos, _ := cl.NewCLElem(i, Pos)
+		cles = append(cles, *ipos)
+	}
+	for i := uint(0); i < cl.size; i++ {
+		ineg, _ := cl.NewCLElem(i, Neg)
+		cles = append(cles, *ineg)
+	}
+	return
+}
+
 // Verify checks the supplied basis to ensure that it is a doubly even binary
 // code.
 func (cl *CL) Verify() (e error) {
