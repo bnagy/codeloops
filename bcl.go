@@ -3,6 +3,7 @@ package codeloops
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -122,10 +123,60 @@ func (cl *CL) LoopElems() (cles []CLElem) {
 	return
 }
 
-// Verify checks the supplied basis to ensure that it is a doubly even binary
+// VerifyBasis checks the supplied basis to ensure that it is a doubly even binary
 // code.
-func (cl *CL) Verify() (e error) {
-	// TODO
+func (cl *CL) VerifyBasis() (e error) {
+	for _, vec := range cl.basis {
+		if bitWeight(vec)%4 != 0 {
+			e = fmt.Errorf("Bad vector %b, bitweight not a multiple of 4.", vec)
+			return
+		}
+	}
+	return
+}
+
+func (cl *CL) VerifyMoufang() (e error) {
+	// populate an array with all elements of the extension
+	elems := cl.LoopElems()
+	// Preallocate the memory for the multiplication elems
+	cle1, cle2, cle3 := new(CLElem), new(CLElem), new(CLElem)
+
+	// Iterate! Treat a bit string as 3 concatenated indicies
+
+	// NB: This is different to the test code!! We are setting elemSz to
+	// basisLen, which is half of the real size of the vector space. This
+	// works because all of the positive vectors are added first in
+	// LoopElems(), so we will still get a full set of triples, just with
+	// no sign.
+
+	//Create masks to pull the element indicies from the counter
+	elemSz := int(cl.basisLen)
+	zeroChunk := strings.Repeat("0", elemSz)
+	oneChunk := strings.Repeat("1", elemSz)
+	yMaskStr := zeroChunk + oneChunk + zeroChunk
+	zMaskStr := zeroChunk + zeroChunk + oneChunk
+	yMask, _ := strconv.ParseUint(yMaskStr, 2, 0)
+	zMask, _ := strconv.ParseUint(zMaskStr, 2, 0)
+
+	for combinedElems := uint(0); combinedElems < 1<<uint(elemSz*3); combinedElems++ {
+
+		cle1 = &elems[combinedElems>>uint(elemSz*2)]             // top elemSz bits as an index
+		cle2 = &elems[(combinedElems&uint(yMask))>>uint(elemSz)] // middle elemSz bits ...
+		cle3 = &elems[combinedElems&uint(zMask)]                 // etc
+
+		// This is a Moufang identity expressed in XOR. If:
+		// sigma(g,k)sigma(h,gk)sigma(g,ghk) == sigma(g,h)sigma(gh,g)sigma(h,k)
+		// then the Moufang property holds.
+		if ((((cle1.vec & cle3.vec) >> 1) & 1) ^
+			(((cle2.vec & (cle1.vec ^ cle3.vec)) >> 1) & 1) ^
+			(((cle1.vec & (cle1.vec ^ cle2.vec ^ cle3.vec)) >> 1) & 1) ^
+			(((cle1.vec & cle2.vec) >> 1) & 1) ^
+			((((cle1.vec ^ cle2.vec) & cle1.vec) >> 1) & 1) ^
+			(((cle2.vec & cle3.vec) >> 1) & 1)) != 0 {
+			e = fmt.Errorf("Failed Moufang Identity for %s %s %s", cle1.String(), cle2.String(), cle3.String())
+			return
+		}
+	}
 	return
 }
 

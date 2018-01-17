@@ -28,6 +28,51 @@ func TestParity(t *testing.T) {
 	}
 }
 
+var badHammingBasis = []uint{
+	0x87, // 1000 | 0111
+	0x4b, // 0100 | 1011
+	0x2d, // 0010 | 1101
+	0x3f, // 0011 | 1111
+}
+
+func TestVerify(t *testing.T) {
+	cl, err := NewCL(HammingBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyBasis()
+	if err != nil {
+		t.Fatalf("Hamming basis failed VerifyBasis(), expected it to pass.")
+	}
+	cl, err = NewCL(badHammingBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyBasis()
+	if err == nil {
+		t.Fatalf("Bad Hamming basis passed VerifyBasis(), expected it to fail.")
+	}
+}
+
+func TestVerifyMoufang(t *testing.T) {
+	cl, err := NewCL(GolayBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyMoufang()
+	if err != nil {
+		t.Fatalf("Golay basis failed VerifyMoufang(): %s", err)
+	}
+	cl, err = NewCL(badHammingBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyMoufang()
+	if err == nil {
+		t.Fatalf("Bad Hamming basis passed VerifyMoufang(), expected it to fail.")
+	}
+}
+
 func TestHammingMoufang(t *testing.T) {
 	cl, err := NewCL(HammingBasis)
 	if err != nil {
@@ -185,59 +230,59 @@ func moufangParallelWorker(work *WorkUnit) {
 	}
 }
 
-func TestGolayMoufangParallel(t *testing.T) {
+// func TestGolayMoufangParallel(t *testing.T) {
 
-	cl, err := NewCL(GolayBasis)
-	if err != nil {
-		t.Fatalf("Failed to create CL: %s", err)
-	}
+// 	cl, err := NewCL(GolayBasis)
+// 	if err != nil {
+// 		t.Fatalf("Failed to create CL: %s", err)
+// 	}
 
-	// populate an array with all elements of the extension
-	elems := cl.LoopElems()
-	wg := &sync.WaitGroup{}
-	failures := make(chan []*CLElem)
-	done := make(chan struct{})
+// 	// populate an array with all elements of the extension
+// 	elems := cl.LoopElems()
+// 	wg := &sync.WaitGroup{}
+// 	failures := make(chan []*CLElem)
+// 	done := make(chan struct{})
 
-	go func() {
-		// This goroutine will wait for all the workers to finish, then close
-		// the done channel, which aborts the main select loop.
-		wg.Wait()
-		close(done)
-	}()
+// 	go func() {
+// 		// This goroutine will wait for all the workers to finish, then close
+// 		// the done channel, which aborts the main select loop.
+// 		wg.Wait()
+// 		close(done)
+// 	}()
 
-	// create and dispatch the work units. Each worker gets assigned a chunk
-	// of the whole range divided by the number of logical CPUs.
-	elemSz := cl.basisLen + 1
-	lim := 1 << (elemSz * 3)
-	step := lim / runtime.NumCPU() // more or less
-	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
-		// create this work unit, and start the worker
-		wg.Add(1)
-		thisStart := uint(step * cpu)
-		thisStop := uint(0)
-		if cpu+1 == runtime.NumCPU() { // last cpu gets the slack
-			thisStop = uint(lim)
-		} else {
-			thisStop = uint((cpu + 1) * step)
-		}
-		wu := &WorkUnit{cl, elems, thisStart, thisStop, failures, wg}
-		go moufangParallelWorker(wu)
-	}
+// 	// create and dispatch the work units. Each worker gets assigned a chunk
+// 	// of the whole range divided by the number of logical CPUs.
+// 	elemSz := cl.basisLen + 1
+// 	lim := 1 << (elemSz * 3)
+// 	step := lim / runtime.NumCPU() // more or less
+// 	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
+// 		// create this work unit, and start the worker
+// 		wg.Add(1)
+// 		thisStart := uint(step * cpu)
+// 		thisStop := uint(0)
+// 		if cpu+1 == runtime.NumCPU() { // last cpu gets the slack
+// 			thisStop = uint(lim)
+// 		} else {
+// 			thisStop = uint((cpu + 1) * step)
+// 		}
+// 		wu := &WorkUnit{cl, elems, thisStart, thisStop, failures, wg}
+// 		go moufangParallelWorker(wu)
+// 	}
 
-	// Wait for the work to finish, or bail immediately if one of the workers
-	// reports a failed triple.
-loop:
-	for {
-		select {
-		case fail := <-failures:
-			t.Fatalf("Failed Moufang Identity for %s %s %s", fail[0].String(), fail[1].String(), fail[2].String())
-		case <-done:
-			// will fire when the done chan is closed
-			break loop
-		}
-	}
+// 	// Wait for the work to finish, or bail immediately if one of the workers
+// 	// reports a failed triple.
+// loop:
+// 	for {
+// 		select {
+// 		case fail := <-failures:
+// 			t.Fatalf("Failed Moufang Identity for %s %s %s", fail[0].String(), fail[1].String(), fail[2].String())
+// 		case <-done:
+// 			// will fire when the done chan is closed
+// 			break loop
+// 		}
+// 	}
 
-}
+// }
 
 func BenchmarkHammingMoufangParallel(b *testing.B) {
 
