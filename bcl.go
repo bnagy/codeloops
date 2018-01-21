@@ -125,6 +125,14 @@ func (cl *CL) LoopElems() (cles []CLElem) {
 	return
 }
 
+func (cl *CL) PrintLoopElems() {
+	fmt.Print("----------\n")
+	for i, cle := range cl.LoopElems() {
+		fmt.Printf("%d: %s\n", i, &cle)
+	}
+	fmt.Print("----------\n")
+}
+
 // VerifyBasis checks the supplied basis to ensure that it is a doubly even binary
 // code.
 func (cl *CL) VerifyBasis() (e error) {
@@ -140,6 +148,11 @@ func (cl *CL) VerifyBasis() (e error) {
 
 func (cl *CL) VerifyMoufang() (e error) {
 	e = cl.checkMoufangParallel()
+	return
+}
+
+func (cl *CL) VerifyMoufang2() (e error) {
+	e = cl.checkMoufangParallel2()
 	return
 }
 
@@ -188,37 +201,31 @@ func (cl *CL) VerifyMoufang() (e error) {
 // 	return
 // }
 
-// Mul performs "multiplication" (the loop action) in the loop.
-func (cle1 *CLElem) Mul(cle2 *CLElem) (res *CLElem) {
-	res = new(CLElem)
-	// this is the sigma function that maps from C^2 -> {0,1}
-	res.sgn = cle1.sgn ^ cle2.sgn ^ (((cle1.vec & cle2.vec) >> 1) & 1)
-	// this is addition in the ambient vector field. Because it has
-	// characteristic 2, addition is xor. The fact that the loop vectors are
-	// closed under ^ is a property of the codes. EG the 16 Hamming codewords
-	// are floating in 8 bit space, but any combination of them under XOR
-	// produces another of the same 16 codewords.
-	res.vec = cle1.vec ^ cle2.vec
-	return
+func sigma(x, y uint) uint {
+	// sigma = x & y               // vector intersection...
+	// sigma -= (sigma >> 1) & m1q // then taking hamming weight (see utility.go)
+	// sigma = (sigma & m2q) + ((sigma >> 2) & m2q)
+	// sigma = (sigma + (sigma >> 4)) & m4q
+	// sigma = (sigma * hq) >> 56 // ... up to here
+	// sigma >>= 1                // divide by 2
+	// return sigma & 1           // and finally check parity
+	return (bitWeight(x&y) >> 1) & 1
 }
 
 // Mul performs "multiplication" (the loop action) in the loop.
-func (cle1 *CLElem) Mul2(cle2, res *CLElem) {
+func (res *CLElem) Mul(cle1, cle2 *CLElem) *CLElem {
 	// this is the sigma function that maps from C^2 -> {0,1}
-	res.sgn = cle1.sgn ^ cle2.sgn ^ (((cle1.vec & cle2.vec) >> 1) & 1)
+	res.sgn = cle1.sgn ^ cle2.sgn ^ sigma(cle1.vec, cle2.vec)
 	// this is addition in the ambient vector field. Because it has
 	// characteristic 2, addition is xor. The fact that the loop vectors are
 	// closed under ^ is a property of the codes. EG the 16 Hamming codewords
 	// are floating in 8 bit space, but any combination of them under XOR
 	// produces another of the same 16 codewords.
 	res.vec = cle1.vec ^ cle2.vec
-	return
+	return res
 }
 
 func (c *CLElem) String() string {
-	if c.str != "" {
-		return c.str
-	}
 	sgn := ""
 	if c.sgn == Neg {
 		sgn = "-"
@@ -266,13 +273,16 @@ func moufangParallelWorker(work *WorkUnit) {
 		// This is a Moufang identity expressed in XOR. If:
 		// sigma(g,k)sigma(h,gk)sigma(g,ghk) == sigma(g,h)sigma(gh,g)sigma(h,k)
 		// then the Moufang property holds.
-		if ((((cle1.vec & cle3.vec) >> 1) & 1) ^
-			(((cle2.vec & (cle1.vec ^ cle3.vec)) >> 1) & 1) ^
-			(((cle1.vec & (cle1.vec ^ cle2.vec ^ cle3.vec)) >> 1) & 1) ^
-			(((cle1.vec & cle2.vec) >> 1) & 1) ^
-			((((cle1.vec ^ cle2.vec) & cle1.vec) >> 1) & 1) ^
-			(((cle2.vec & cle3.vec) >> 1) & 1)) != 0 {
+		if sigma(cle1.vec, cle3.vec)^
+			sigma(cle2.vec, cle1.vec^cle3.vec)^
+			sigma(cle1.vec, cle1.vec^cle2.vec^cle3.vec)^
+			sigma(cle1.vec, cle2.vec)^
+			sigma(cle1.vec^cle2.vec, cle1.vec)^
+			sigma(cle2.vec, cle3.vec) != 0 {
 			work.Failures <- []*CLElem{cle1, cle2, cle3}
+			return // Assuming all the other workers also exit early, we'll be OK.
+			// Worst case, we run through ~all the tests, which is still twice
+			// as fast as using an abort channel via a select() loop here.
 		}
 	}
 }
@@ -311,14 +321,111 @@ func (cl *CL) checkMoufangParallel() (e error) {
 		go moufangParallelWorker(wu)
 	}
 
+loop:
+	for {
+		select {
+		case fail := <-failures:
+			// there could be many errors, we just keep the last one.
+			e = fmt.Errorf("Failed Moufang Identity for %s %s %s", fail[0].String(), fail[1].String(), fail[2].String())
+		case <-done:
+			// will fire when the done chan is closed (all workers have returned)
+			break loop
+		}
+	}
+	return
+}
+
+// Older and slower, but uses full Mul() calls. Useful in case of bugs.
+func moufangParallelWorker2(work *WorkUnit) {
+
+	defer work.Wg.Done()
+
+	// Preallocate the memory for the multiplication elems
+	// Preallocate the memory for the multiplication elems
+	x, y, z := new(CLElem), new(CLElem), new(CLElem)
+	zy, x_zy, z__x_zy := new(CLElem), new(CLElem), new(CLElem)
+	zx, zx_z, zx_z__y := new(CLElem), new(CLElem), new(CLElem)
+
+	// Iterate! Treat a bit string as 3 concatenated element indices, and then
+	// use those to select the appropriate real element out of the work.Elems
+	// slice.
+
+	// Create masks to pull the element indicies from the counter
+	elemSz := work.BaseCL.basisLen + 1
+	zeroChunk := strings.Repeat("0", int(elemSz))
+	oneChunk := strings.Repeat("1", int(elemSz))
+	yMaskStr := zeroChunk + oneChunk + zeroChunk
+	zMaskStr := zeroChunk + zeroChunk + oneChunk
+	yMask, _ := strconv.ParseUint(yMaskStr, 2, 0)
+	zMask, _ := strconv.ParseUint(zMaskStr, 2, 0)
+
+	for combinedElems := work.StartIdx; combinedElems < work.StopIdx; combinedElems++ {
+		// verify Moufang identity:
+		// z(x(zy)) = ((zx)z)y
+		x = &work.Elems[combinedElems>>(elemSz*2)]           // top 5 bits as an index
+		y = &work.Elems[(combinedElems&uint(yMask))>>elemSz] // middle 5 bits ...
+		z = &work.Elems[combinedElems&uint(zMask)]           // etc
+
+		// LHS 1
+		zy.Mul(z, y)
+		x_zy.Mul(x, zy)
+		z__x_zy.Mul(z, x_zy)
+
+		//RHS 1
+		zx.Mul(z, x)
+		zx_z.Mul(zx, z)
+		zx_z__y.Mul(zx_z, y)
+
+		// The vector ops are associative, the only thing that can mismatch is the sign.
+		if z__x_zy.sgn != zx_z__y.sgn {
+			work.Failures <- []*CLElem{x, y, z}
+		}
+
+	}
+
+}
+
+func (cl *CL) checkMoufangParallel2() (e error) {
+
+	elems := cl.LoopElems()
+
+	wg := &sync.WaitGroup{}
+	failures := make(chan []*CLElem)
+	done := make(chan struct{})
+
+	go func() {
+		// This goroutine will wait for all the workers to finish, then close
+		// the done channel, which aborts the main select loop.
+		wg.Wait()
+		close(done)
+	}()
+
+	// create and dispatch the work units. Each worker gets assigned a chunk
+	// of the whole range divided by the number of logical CPUs.
+	elemSz := cl.basisLen + 1
+	lim := 1 << (elemSz * 3)
+	step := lim / runtime.NumCPU() // more or less
+	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
+		// create this work unit, and start the worker
+		wg.Add(1)
+		thisStart := uint(step * cpu)
+		thisStop := uint(0)
+		if cpu+1 == runtime.NumCPU() { // last cpu gets the slack
+			thisStop = uint(lim)
+		} else {
+			thisStop = uint((cpu + 1) * step)
+		}
+		wu := &WorkUnit{cl, elems, thisStart, thisStop, failures, wg}
+		go moufangParallelWorker2(wu)
+	}
+
 	// Wait for the work to finish, or bail immediately if one of the workers
 	// reports a failed triple.
 loop:
 	for {
 		select {
 		case fail := <-failures:
-			// We complete the entire workspace, so there could be many
-			// errors, we just keep the last one.
+			// there could be many errors, we just keep the last one.
 			e = fmt.Errorf("Failed Moufang Identity for %s %s %s", fail[0].String(), fail[1].String(), fail[2].String())
 		case <-done:
 			// will fire when the done chan is closed (all workers have returned)

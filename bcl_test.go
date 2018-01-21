@@ -1,16 +1,34 @@
 package codeloops
 
 import (
-	"runtime"
-	"strconv"
-	"strings"
-	"sync"
 	"testing"
 )
 
+var badHammingBasis = []uint{
+	0x87, // 1000 | 0111
+	0x4b, // 0100 | 1011
+	0x3d, // 0011 | 1101 <-- should be 0x2d
+	0x1e, // 0001 | 1110
+}
+
+var badGolayBasis = []uint{
+	0x8009f1,
+	0x4004fa,
+	0x20027d,
+	0x11093e, // <-- should be 0x10093e
+	0x80c9d,
+	0x40e4e,
+	0x20f25,
+	0x10f92,
+	0x87c9,
+	0x43e6,
+	0x2557,
+	0x1aab,
+}
+
 func TestBitWeight(t *testing.T) {
 	tests := []uint{0x0, 0x1, 0x87, 0xff, 0xffffffff, 0xdeadbeef, 0xffffffffdeadbeef}
-	expect := []int{0, 1, 4, 8, 32, 24, 56}
+	expect := []uint{0, 1, 4, 8, 32, 24, 56}
 	for idx, x := range tests {
 		if bitWeight(x) != expect[idx] {
 			t.Errorf("TestBitWeight: Weight of 0x%x should be %d, got %d", x, expect[idx], bitWeight(x))
@@ -18,36 +36,14 @@ func TestBitWeight(t *testing.T) {
 	}
 }
 
-func TestParity(t *testing.T) {
-	tests := []uint{0x0, 0x1, 0x87, 0xff, 0xffffffff, 0xdeadbeef, 0xefffffffdeadbeef}
-	expect := []int{0, 1, 0, 0, 0, 0, 1}
+func TestPopCntq(t *testing.T) {
+	tests := []uint{0x0, 0x1, 0x87, 0xff, 0xffffffff, 0xdeadbeef, 0xffffffffdeadbeef}
+	expect := []uint{0, 1, 4, 8, 32, 24, 56}
 	for idx, x := range tests {
-		if parity(x) != expect[idx] {
-			t.Errorf("TestParity: Parity of 0x%x should be %d, got %d", x, expect[idx], bitWeight(x))
+		if popCntq(x) != expect[idx] {
+			t.Errorf("TestPopCntq: Weight of 0x%x should be %d, got %d", x, expect[idx], popCntq(x))
 		}
 	}
-}
-
-var badHammingBasis = []uint{
-	0x87, // 1000 | 0111
-	0x4b, // 0100 | 1011
-	0x2d, // 0010 | 1101
-	0x3f, // 0011 | 1111
-}
-
-var badGolayBasis = []uint{
-	0x8009f1,
-	0x4004fa,
-	0x20327d,
-	0x10093e,
-	0x80c9d,
-	0x40e4e,
-	0x20f25,
-	0x10e92,
-	0x87c9,
-	0x43e6,
-	0x2557,
-	0x1aab,
 }
 
 func TestVerifyBasis(t *testing.T) {
@@ -66,6 +62,90 @@ func TestVerifyBasis(t *testing.T) {
 	err = cl.VerifyBasis()
 	if err == nil {
 		t.Fatalf("Bad Hamming basis passed VerifyBasis(), expected it to fail.")
+	}
+	cl, err = NewCL(GolayBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyBasis()
+	if err != nil {
+		t.Fatalf("Golay basis failed VerifyBasis(), expected it to pass.")
+	}
+	cl, err = NewCL(badGolayBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyBasis()
+	if err == nil {
+		t.Fatalf("Bad Golay basis passed VerifyBasis(), expected it to fail.")
+	}
+}
+
+func TestVerifyHammingMoufangGood(t *testing.T) {
+	cl, err := NewCL(HammingBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyMoufang()
+	if err != nil {
+		t.Fatalf("Hamming basis failed VerifyMoufang(): %s", err)
+	}
+}
+
+func TestVerifyHammingMoufangBad(t *testing.T) {
+	cl, err := NewCL(badHammingBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyMoufang()
+	if err == nil {
+		t.Fatalf("Bad Hamming basis passed VerifyMoufang(), expected it to fail.")
+	}
+}
+
+func TestVerifyGolayMoufangGood(t *testing.T) {
+	cl, err := NewCL(GolayBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyMoufang()
+	if err != nil {
+		t.Fatalf("Golay basis failed VerifyMoufang(): %s", err)
+	}
+}
+
+func TestVerifyGolayMoufangBad(t *testing.T) {
+	cl, err := NewCL(badGolayBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyMoufang()
+	if err == nil {
+		t.Fatalf("Bad Golay basis passed VerifyMoufang(), expected it to fail.")
+	}
+}
+
+func BenchmarkBitWeight(b *testing.B) {
+	// dummy var stops the compiler from eliminating dead code in the loop
+	dummy := uint(0)
+	for i := 0; i < b.N; i++ {
+		dummy = bitWeight(0xdeadbeef)
+	}
+}
+
+// This benches much slower, despite being implemented as a single asm
+// instruction? Maybe the trampoline process costs a nanosecond or so...
+func BenchmarkPopCntq(b *testing.B) {
+	dummy := uint(0)
+	for i := 0; i < b.N; i++ {
+		dummy = popCntq(0xdeadbeef)
+	}
+}
+
+func BenchmarkSigma(b *testing.B) {
+	dummy := uint(0)
+	for i := 0; i < b.N; i++ {
+		dummy = sigma(0xdeadbeef, 0xfacef00d)
 	}
 }
 
@@ -95,209 +175,15 @@ func BenchmarkVerifyBasisGolay(b *testing.B) {
 	}
 }
 
-func TestVerifyMoufang(t *testing.T) {
-	cl, err := NewCL(GolayBasis)
-	if err != nil {
-		t.Fatalf("Failed to create CL: %s", err)
-	}
-	err = cl.VerifyMoufang()
-	if err != nil {
-		t.Fatalf("Golay basis failed VerifyMoufang(): %s", err)
-	}
-	cl, err = NewCL(badGolayBasis)
-	if err != nil {
-		t.Fatalf("Failed to create CL: %s", err)
-	}
-	err = cl.VerifyMoufang()
-	if err == nil {
-		t.Fatalf("Bad Golay basis passed VerifyMoufang(), expected it to fail.")
-	}
-}
-
-func TestHammingMoufang(t *testing.T) {
-	cl, err := NewCL(HammingBasis)
-	if err != nil {
-		t.Fatalf("Failed to create CL: %s", err)
-	}
-	// populate an array with all elements of the extension
-	elems := cl.LoopElems()
-	// Preallocate the memory for the multiplication elems
-	x, y, z := new(CLElem), new(CLElem), new(CLElem)
-	zy, x_zy, z__x_zy := new(CLElem), new(CLElem), new(CLElem)
-	zx, zx_z, zx_z__y := new(CLElem), new(CLElem), new(CLElem)
-
-	// Iterate! Treat a bit string as 3 concatenated elems
-
-	// Create masks to pull the elems from the counter
-	elemSz := int(cl.basisLen + 1)
-	zeroChunk := strings.Repeat("0", elemSz)
-	oneChunk := strings.Repeat("1", elemSz)
-	yMaskStr := zeroChunk + oneChunk + zeroChunk
-	zMaskStr := zeroChunk + zeroChunk + oneChunk
-	yMask, _ := strconv.ParseUint(yMaskStr, 2, 0)
-	zMask, _ := strconv.ParseUint(zMaskStr, 2, 0)
-
-	for combinedElems := uint(0); combinedElems < 1<<uint(elemSz*3); combinedElems++ {
-
-		// verify Moufang identity:
-		// z(x(zy)) = ((zx)z)y
-		x = &elems[combinedElems>>10]              // top 5 bits as an index
-		y = &elems[(combinedElems&uint(yMask))>>5] // middle 5 bits ...
-		z = &elems[combinedElems&uint(zMask)]      // etc
-
-		// These identifiers are not good Go style, but they capture the associativity
-		// which is more important right now...
-		// LHS 1
-		z.Mul2(y, zy)
-		x.Mul2(zy, x_zy)
-		z.Mul2(x_zy, z__x_zy)
-		//RHS 1
-		z.Mul2(x, zx)
-		zx.Mul2(z, zx_z)
-		zx_z.Mul2(y, zx_z__y)
-		if (z__x_zy.vec<<1)&z__x_zy.sgn != (zx_z__y.vec<<1)&zx_z__y.sgn {
-			t.Fatalf("Failed Moufang Identity for %s %s %s", x.String(), y.String(), z.String())
-		}
-
-	}
-
-}
-
 func BenchmarkHammingMoufang(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		cl, err := NewCL(HammingBasis)
-		if err != nil {
-			b.Fatalf("Failed to create CL: %s", err)
-		}
-		// populate an array with all elements of the extension
-		elems := cl.LoopElems()
-		// Preallocate the memory for the multiplication elems
-		x, y, z := new(CLElem), new(CLElem), new(CLElem)
-		zy, x_zy, z__x_zy := new(CLElem), new(CLElem), new(CLElem)
-		zx, zx_z, zx_z__y := new(CLElem), new(CLElem), new(CLElem)
-
-		// Iterate! Treat a bit string as 3 concatenated elems
-
-		// Create masks to pull the elems from the counter
-		elemSz := int(cl.basisLen + 1)
-		zeroChunk := strings.Repeat("0", elemSz)
-		oneChunk := strings.Repeat("1", elemSz)
-		yMaskStr := zeroChunk + oneChunk + zeroChunk
-		zMaskStr := zeroChunk + zeroChunk + oneChunk
-		yMask, _ := strconv.ParseUint(yMaskStr, 2, 0)
-		zMask, _ := strconv.ParseUint(zMaskStr, 2, 0)
-
-		for combinedElems := uint(0); combinedElems < 1<<uint(elemSz*3); combinedElems++ {
-
-			// verify Moufang identity:
-			// z(x(zy)) = ((zx)z)y
-			x = &elems[combinedElems>>10]              // top 5 bits as an index
-			y = &elems[(combinedElems&uint(yMask))>>5] // middle 5 bits ...
-			z = &elems[combinedElems&uint(zMask)]      // etc
-
-			// These identifiers are not good Go style, but they capture the associativity
-			// which is more important right now...
-
-			// LHS
-			z.Mul2(y, zy)
-			x.Mul2(zy, x_zy)
-			z.Mul2(x_zy, z__x_zy)
-			//RHS
-			z.Mul2(x, zx)
-			zx.Mul2(z, zx_z)
-			zx_z.Mul2(y, zx_z__y)
-
-			if (z__x_zy.vec<<1)&z__x_zy.sgn != (zx_z__y.vec<<1)&zx_z__y.sgn {
-				b.Fatalf("Failed Moufang Identity for %s %s %s", x.String(), y.String(), z.String())
-			}
-		}
-
-	}
-}
-
-func TestBadHammingMoufangParallel(t *testing.T) {
-	cl, err := NewCL(HammingBasis)
-	if err != nil {
-		t.Fatalf("Failed to create CL: %s", err)
-	}
-	err = cl.checkMoufangParallel()
-	if err != nil {
-		t.Fatalf("Bad Hamming basis passed Moufang test, expected it to fail.")
-	}
-}
-
-// func TestBadGolayMoufangParallel(t *testing.T) {
-// 	err := checkMoufangParallel(badGolayBasis)
-// 	if err == nil {
-// 		t.Fatalf("Bad Golay basis passed Moufang test, expected it to fail.")
-// 	}
-// }
-
-func BenchmarkHammingMoufangParallel(b *testing.B) {
-
 	cl, err := NewCL(HammingBasis)
 	if err != nil {
 		b.Fatalf("Failed to create CL: %s", err)
 	}
 	for n := 0; n < b.N; n++ {
-		err := cl.checkMoufangParallel
+		err = cl.VerifyMoufang()
 		if err != nil {
 			b.Fatalf("%s", err)
-		}
-	}
-}
-
-func BenchmarkHammingMoufangParallelInline(b *testing.B) {
-
-	for n := 0; n < b.N; n++ {
-		cl, err := NewCL(HammingBasis)
-		if err != nil {
-			b.Fatalf("Failed to create CL: %s", err)
-		}
-
-		// populate an array with all elements of the extension
-		elems := cl.LoopElems()
-		wg := &sync.WaitGroup{}
-		failures := make(chan []*CLElem)
-		done := make(chan struct{})
-
-		go func() {
-			// This goroutine will wait for all the workers to finish, then close
-			// the done channel, which aborts the main select loop.
-			wg.Wait()
-			close(done)
-		}()
-
-		// create and dispatch the work units. Each worker gets assigned a chunk
-		// of the whole range divided by the number of logical CPUs.
-		elemSz := cl.basisLen + 1
-		lim := 1 << (elemSz * 3)
-		step := lim / runtime.NumCPU() // more or less
-		for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
-			// create this work unit, and start the worker
-			wg.Add(1)
-			thisStart := uint(step * cpu)
-			thisStop := uint(0)
-			if cpu+1 == runtime.NumCPU() { // last cpu gets the slack
-				thisStop = uint(lim)
-			} else {
-				thisStop = uint((cpu + 1) * step)
-			}
-			wu := &WorkUnit{cl, elems, thisStart, thisStop, failures, wg}
-			go moufangParallelWorker(wu)
-		}
-
-		// Wait for the work to finish, or bail immediately if one of the workers
-		// reports a failed triple.
-	loop:
-		for {
-			select {
-			case fail := <-failures:
-				b.Fatalf("Failed Moufang Identity for %s %s %s", fail[0].String(), fail[1].String(), fail[2].String())
-			case <-done:
-				// will fire when the done chan is closed
-				break loop
-			}
 		}
 	}
 }
@@ -309,24 +195,11 @@ func BenchmarkMul(b *testing.B) {
 	}
 	x, _ := cl.NewCLElem(5, Pos)
 	y, _ := cl.NewCLElem(7, Neg)
+	res := new(CLElem)
 	for n := 0; n < b.N; n++ {
-		x.Mul(y)
+		res.Mul(x, y)
 	}
 
-}
-
-func BenchmarkMul2(b *testing.B) {
-	cl, err := NewCL(HammingBasis)
-	if err != nil {
-		b.Fatalf("Failed to create CL: %s", err)
-	}
-	x, _ := cl.NewCLElem(5, Pos)
-	y, _ := cl.NewCLElem(7, Neg)
-	z, _ := cl.NewCLElem(0, Pos)
-
-	for n := 0; n < b.N; n++ {
-		x.Mul2(y, z)
-	}
 }
 
 func BenchmarkLoopElemsHamming(b *testing.B) {
@@ -348,118 +221,3 @@ func BenchmarkLoopElemsGolay(b *testing.B) {
 		cl.LoopElems()
 	}
 }
-
-// OLD VERSION
-// type WorkUnit struct {
-// 	BaseCL   *CL
-// 	Elems    []CLElem // readonly, should be safe
-// 	StartIdx uint
-// 	StopIdx  uint
-// 	Failures chan<- []*CLElem
-// 	Wg       *sync.WaitGroup
-// }
-
-// func moufangParallelWorker(work *WorkUnit) {
-
-// 	defer work.Wg.Done()
-
-// 	// Preallocate the memory for the multiplication elems
-// 	x, y, z := new(CLElem), new(CLElem), new(CLElem)
-// 	zy, x_zy, z__x_zy := new(CLElem), new(CLElem), new(CLElem)
-// 	zx, zx_z, zx_z__y := new(CLElem), new(CLElem), new(CLElem)
-
-// 	// Iterate! Treat a bit string as 3 concatenated element indices, and then
-// 	// use those to select the appropriate real element out of the work.Elems
-// 	// slice.
-
-// 	// Create masks to pull the element indicies from the counter
-// 	elemSz := int(work.BaseCL.basisLen + 1)
-// 	zeroChunk := strings.Repeat("0", elemSz)
-// 	oneChunk := strings.Repeat("1", elemSz)
-// 	yMaskStr := zeroChunk + oneChunk + zeroChunk
-// 	zMaskStr := zeroChunk + zeroChunk + oneChunk
-// 	yMask, _ := strconv.ParseUint(yMaskStr, 2, 0)
-// 	zMask, _ := strconv.ParseUint(zMaskStr, 2, 0)
-
-// 	for combinedElems := work.StartIdx; combinedElems < work.StopIdx; combinedElems++ {
-
-// 		x = &work.Elems[combinedElems>>uint(elemSz*2)]             // top elemSz bits as an index
-// 		y = &work.Elems[(combinedElems&uint(yMask))>>uint(elemSz)] // middle elemSz bits ...
-// 		z = &work.Elems[combinedElems&uint(zMask)]                 // etc
-
-// 		// verify Moufang identity:
-// 		// z(x(zy)) = ((zx)z)y
-// 		// These identifiers are not good Go style, but they capture the
-// 		// associativity which is more important right now.
-// 		// LHS:
-// 		z.Mul2(y, zy)
-// 		x.Mul2(zy, x_zy)
-// 		z.Mul2(x_zy, z__x_zy)
-// 		// RHS:
-// 		z.Mul2(x, zx)
-// 		zx.Mul2(z, zx_z)
-// 		zx_z.Mul2(y, zx_z__y)
-// 		// combine vec and sgn so we can compare both
-// 		if (z__x_zy.vec<<1)&z__x_zy.sgn != (zx_z__y.vec<<1)&zx_z__y.sgn {
-// 			work.Failures <- []*CLElem{x, y, z}
-// 		}
-// 	}
-// }
-
-// func checkMoufangParallel(basis []uint) (e error) {
-
-// 	cl, err := NewCL(basis)
-// 	if err != nil {
-// 		e = fmt.Errorf("Failed to create CL: %s", err)
-// 		return
-// 	}
-
-// 	// populate an array with all elements of the extension
-// 	elems := cl.LoopElems()
-// 	wg := &sync.WaitGroup{}
-// 	failures := make(chan []*CLElem)
-// 	done := make(chan struct{})
-
-// 	go func() {
-// 		// This goroutine will wait for all the workers to finish, then close
-// 		// the done channel, which aborts the main select loop.
-// 		wg.Wait()
-// 		close(done)
-// 	}()
-
-// 	// create and dispatch the work units. Each worker gets assigned a chunk
-// 	// of the whole range divided by the number of logical CPUs.
-// 	elemSz := cl.basisLen + 1
-// 	lim := 1 << (elemSz * 3)
-// 	step := lim / runtime.NumCPU() // more or less
-// 	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
-// 		// create this work unit, and start the worker
-// 		wg.Add(1)
-// 		thisStart := uint(step * cpu)
-// 		thisStop := uint(0)
-// 		if cpu+1 == runtime.NumCPU() { // last cpu gets the slack
-// 			thisStop = uint(lim)
-// 		} else {
-// 			thisStop = uint((cpu + 1) * step)
-// 		}
-// 		wu := &WorkUnit{cl, elems, thisStart, thisStop, failures, wg}
-// 		go moufangParallelWorker(wu)
-// 	}
-
-// 	// Wait for the work to finish, or bail immediately if one of the workers
-// 	// reports a failed triple.
-// loop:
-// 	for {
-// 		select {
-// 		case fail := <-failures:
-// 			// We could race and get many errors before we get around to
-// 			// reading the done chan and breaking, this will just keep the
-// 			// last one.
-// 			e = fmt.Errorf("Failed Moufang Identity for %s %s %s", fail[0].String(), fail[1].String(), fail[2].String())
-// 		case <-done:
-// 			// will fire when the done chan is closed
-// 			break loop
-// 		}
-// 	}
-// 	return
-// }
