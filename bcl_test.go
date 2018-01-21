@@ -129,7 +129,7 @@ func BenchmarkBitWeight(b *testing.B) {
 	// dummy var stops the compiler from eliminating dead code in the loop
 	dummy := uint(0)
 	for i := 0; i < b.N; i++ {
-		dummy = bitWeight(0xdeadbeef)
+		dummy |= bitWeight(0xdeadbeef)
 	}
 }
 
@@ -138,23 +138,23 @@ func BenchmarkBitWeight(b *testing.B) {
 func BenchmarkPopCntq(b *testing.B) {
 	dummy := uint(0)
 	for i := 0; i < b.N; i++ {
-		dummy = popCntq(0xdeadbeef)
+		dummy |= popCntq(0xdeadbeef)
 	}
 }
 
 func BenchmarkSigma(b *testing.B) {
 	dummy := uint(0)
 	for i := 0; i < b.N; i++ {
-		dummy = sigma(0xdeadbeef, 0xfacef00d)
+		dummy |= sigma(0xdeadbeef, 0xfacef00d)
 	}
 }
 
 func BenchmarkVerifyBasisHamming(b *testing.B) {
+	cl, err := NewCL(HammingBasis)
+	if err != nil {
+		b.Fatalf("Failed to create CL: %s", err)
+	}
 	for n := 0; n < b.N; n++ {
-		cl, err := NewCL(HammingBasis)
-		if err != nil {
-			b.Fatalf("Failed to create CL: %s", err)
-		}
 		err = cl.VerifyBasis()
 		if err != nil {
 			b.Fatalf("Hamming basis failed VerifyBasis(), expected it to pass.")
@@ -163,11 +163,11 @@ func BenchmarkVerifyBasisHamming(b *testing.B) {
 }
 
 func BenchmarkVerifyBasisGolay(b *testing.B) {
+	cl, err := NewCL(GolayBasis)
+	if err != nil {
+		b.Fatalf("Failed to create CL: %s", err)
+	}
 	for n := 0; n < b.N; n++ {
-		cl, err := NewCL(GolayBasis)
-		if err != nil {
-			b.Fatalf("Failed to create CL: %s", err)
-		}
 		err = cl.VerifyBasis()
 		if err != nil {
 			b.Fatalf("Golay basis failed VerifyBasis(), expected it to pass.")

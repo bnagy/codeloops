@@ -136,8 +136,7 @@ func (cl *CL) PrintLoopElems() {
 // VerifyBasis checks the supplied basis to ensure that it is a doubly even binary
 // code.
 func (cl *CL) VerifyBasis() (e error) {
-	elems := cl.LoopElems()
-	for _, cle := range elems {
+	for _, cle := range cl.LoopElems() {
 		if bitWeight(cle.vec)%4 != 0 {
 			e = fmt.Errorf("Bad vector %b, bitweight not a multiple of 4.", cle.vec)
 			return
@@ -151,77 +150,25 @@ func (cl *CL) VerifyMoufang() (e error) {
 	return
 }
 
-func (cl *CL) VerifyMoufang2() (e error) {
-	e = cl.checkMoufangParallel2()
+func (cl *CL) VerifyMoufangSlow() (e error) {
+	e = cl.checkMoufangParallelSlow()
 	return
 }
 
-// func (cl *CL) VerifyMoufang() (e error) {
-// 	// populate an array with all elements of the extension
-// 	elems := cl.LoopElems()
-// 	// Preallocate the memory for the multiplication elems
-// 	cle1, cle2, cle3 := new(CLElem), new(CLElem), new(CLElem)
-
-// 	// Iterate! Treat a bit string as 3 concatenated indicies
-
-// 	// NB: This is different to the test code!! We are setting elemSz to
-// 	// basisLen, which is half of the real size of the vector space. This
-// 	// works because all of the positive vectors are added first in
-// 	// LoopElems(), so we will still get a full set of triples, just with
-// 	// no sign.
-
-// 	//Create masks to pull the element indicies from the counter
-// 	elemSz := int(cl.basisLen)
-// 	zeroChunk := strings.Repeat("0", elemSz)
-// 	oneChunk := strings.Repeat("1", elemSz)
-// 	yMaskStr := zeroChunk + oneChunk + zeroChunk
-// 	zMaskStr := zeroChunk + zeroChunk + oneChunk
-// 	yMask, _ := strconv.ParseUint(yMaskStr, 2, 0)
-// 	zMask, _ := strconv.ParseUint(zMaskStr, 2, 0)
-
-// 	for combinedElems := uint(0); combinedElems < 1<<uint(elemSz*3); combinedElems++ {
-
-// 		cle1 = &elems[combinedElems>>uint(elemSz*2)]             // top elemSz bits as an index
-// 		cle2 = &elems[(combinedElems&uint(yMask))>>uint(elemSz)] // middle elemSz bits ...
-// 		cle3 = &elems[combinedElems&uint(zMask)]                 // etc
-
-// 		// This is a Moufang identity expressed in XOR. If:
-// 		// sigma(g,k)sigma(h,gk)sigma(g,ghk) == sigma(g,h)sigma(gh,g)sigma(h,k)
-// 		// then the Moufang property holds.
-// 		if ((((cle1.vec & cle3.vec) >> 1) & 1) ^
-// 			(((cle2.vec & (cle1.vec ^ cle3.vec)) >> 1) & 1) ^
-// 			(((cle1.vec & (cle1.vec ^ cle2.vec ^ cle3.vec)) >> 1) & 1) ^
-// 			(((cle1.vec & cle2.vec) >> 1) & 1) ^
-// 			((((cle1.vec ^ cle2.vec) & cle1.vec) >> 1) & 1) ^
-// 			(((cle2.vec & cle3.vec) >> 1) & 1)) != 0 {
-// 			e = fmt.Errorf("Failed Moufang Identity for %s %s %s", cle1.String(), cle2.String(), cle3.String())
-// 			return
-// 		}
-// 	}
-// 	return
-// }
-
 func sigma(x, y uint) uint {
-	// sigma = x & y               // vector intersection...
-	// sigma -= (sigma >> 1) & m1q // then taking hamming weight (see utility.go)
-	// sigma = (sigma & m2q) + ((sigma >> 2) & m2q)
-	// sigma = (sigma + (sigma >> 4)) & m4q
-	// sigma = (sigma * hq) >> 56 // ... up to here
-	// sigma >>= 1                // divide by 2
-	// return sigma & 1           // and finally check parity
 	return (bitWeight(x&y) >> 1) & 1
 }
 
 // Mul performs "multiplication" (the loop action) in the loop.
-func (res *CLElem) Mul(cle1, cle2 *CLElem) *CLElem {
+func (res *CLElem) Mul(x, y *CLElem) *CLElem {
 	// this is the sigma function that maps from C^2 -> {0,1}
-	res.sgn = cle1.sgn ^ cle2.sgn ^ sigma(cle1.vec, cle2.vec)
+	res.sgn = x.sgn ^ y.sgn ^ sigma(x.vec, y.vec)
 	// this is addition in the ambient vector field. Because it has
 	// characteristic 2, addition is xor. The fact that the loop vectors are
 	// closed under ^ is a property of the codes. EG the 16 Hamming codewords
 	// are floating in 8 bit space, but any combination of them under XOR
 	// produces another of the same 16 codewords.
-	res.vec = cle1.vec ^ cle2.vec
+	res.vec = x.vec ^ y.vec
 	return res
 }
 
@@ -250,7 +197,7 @@ func moufangParallelWorker(work *WorkUnit) {
 	defer work.Wg.Done()
 
 	// Preallocate the memory for the multiplication elems
-	cle1, cle2, cle3 := new(CLElem), new(CLElem), new(CLElem)
+	x, y, z := new(CLElem), new(CLElem), new(CLElem)
 
 	// Iterate! Treat a bit string as 3 concatenated element indices, and then
 	// use those to select the appropriate real element out of the work.Elems
@@ -266,20 +213,20 @@ func moufangParallelWorker(work *WorkUnit) {
 	zMask, _ := strconv.ParseUint(zMaskStr, 2, 0)
 
 	for combinedElems := work.StartIdx; combinedElems < work.StopIdx; combinedElems++ {
-		cle1 = &work.Elems[combinedElems>>uint(elemSz*2)]             // top elemSz bits as an index
-		cle2 = &work.Elems[(combinedElems&uint(yMask))>>uint(elemSz)] // middle elemSz bits ...
-		cle3 = &work.Elems[combinedElems&uint(zMask)]                 // etc
+		x = &work.Elems[combinedElems>>uint(elemSz*2)]             // top elemSz bits as an index
+		y = &work.Elems[(combinedElems&uint(yMask))>>uint(elemSz)] // middle elemSz bits ...
+		z = &work.Elems[combinedElems&uint(zMask)]                 // etc
 
 		// This is a Moufang identity expressed in XOR. If:
-		// sigma(g,k)sigma(h,gk)sigma(g,ghk) == sigma(g,h)sigma(gh,g)sigma(h,k)
+		// sigma(x,z)sigma(y,xz)sigma(x,xyz) == sigma(x,y)sigma(xy,x)sigma(y,z)
 		// then the Moufang property holds.
-		if sigma(cle1.vec, cle3.vec)^
-			sigma(cle2.vec, cle1.vec^cle3.vec)^
-			sigma(cle1.vec, cle1.vec^cle2.vec^cle3.vec)^
-			sigma(cle1.vec, cle2.vec)^
-			sigma(cle1.vec^cle2.vec, cle1.vec)^
-			sigma(cle2.vec, cle3.vec) != 0 {
-			work.Failures <- []*CLElem{cle1, cle2, cle3}
+		if sigma(x.vec, z.vec)^
+			sigma(y.vec, x.vec^z.vec)^
+			sigma(x.vec, x.vec^y.vec^z.vec)^
+			sigma(x.vec, y.vec)^
+			sigma(x.vec^y.vec, x.vec)^
+			sigma(y.vec, z.vec) != 0 {
+			work.Failures <- []*CLElem{x, y, z}
 			return // Assuming all the other workers also exit early, we'll be OK.
 			// Worst case, we run through ~all the tests, which is still twice
 			// as fast as using an abort channel via a select() loop here.
@@ -336,7 +283,7 @@ loop:
 }
 
 // Older and slower, but uses full Mul() calls. Useful in case of bugs.
-func moufangParallelWorker2(work *WorkUnit) {
+func moufangParallelWorkerSlow(work *WorkUnit) {
 
 	defer work.Wg.Done()
 
@@ -385,7 +332,7 @@ func moufangParallelWorker2(work *WorkUnit) {
 
 }
 
-func (cl *CL) checkMoufangParallel2() (e error) {
+func (cl *CL) checkMoufangParallelSlow() (e error) {
 
 	elems := cl.LoopElems()
 
@@ -416,7 +363,7 @@ func (cl *CL) checkMoufangParallel2() (e error) {
 			thisStop = uint((cpu + 1) * step)
 		}
 		wu := &WorkUnit{cl, elems, thisStart, thisStop, failures, wg}
-		go moufangParallelWorker2(wu)
+		go moufangParallelWorkerSlow(wu)
 	}
 
 	// Wait for the work to finish, or bail immediately if one of the workers
