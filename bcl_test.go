@@ -94,32 +94,29 @@ func TestVerifyHammingMoufangGood(t *testing.T) {
 }
 
 func TestVerifyHammingNotAssoc(t *testing.T) {
-	cl, err := NewCL(GolayBasis)
+	cl, err := NewCL(HammingBasis)
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
 	isAssoc := true
 	elems := cl.LoopElems()
-	f := func(triple []uint) error {
-		a, b, c := &elems[triple[0]], &elems[triple[1]], &elems[triple[2]]
-		// fmt.Printf("a: %s b: %s c: %s ", a, b, c)
 
+	SetCombinationsWithReplacement(uint(len(elems)), 3, func(triple []uint) error {
+		a, b, c := &elems[triple[0]], &elems[triple[1]], &elems[triple[2]]
 		a_bc, ab_c := new(CLElem), new(CLElem)
+
 		a_bc.Mul(b, c)
-		// fmt.Printf("bc: %s ", a_bc)
 		a_bc.Mul(a, a_bc)
 		ab_c.Mul(a, b)
-		// fmt.Printf("ab: %s ", ab_c)
 		ab_c.Mul(ab_c, c)
-		// fmt.Printf("a(bc): %s (ab)c: %s\n", a_bc, ab_c)
 
 		if a_bc.sgn != ab_c.sgn {
 			isAssoc = false
 			return fmt.Errorf("Not assoc")
 		}
 		return nil
-	}
-	SetCombinationsWithReplacement(uint(len(elems)), 3, f)
+	})
+
 	if isAssoc {
 		t.Fatalf("Hamming basis produced an associative group, expected a loop.")
 	}
@@ -180,46 +177,47 @@ func TestBuildTheta(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
-	theta, err := cl.buildTheta2()
+	err = cl.BuildTheta()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(theta) != 1<<(uint(len(basis)*2)) {
-		fmt.Printf("%#v\n", cl.VectorSpace())
-
-		for k, v := range theta {
-			fmt.Printf("%.4x %d\n", k, v)
-		}
-
-		t.Fatalf("Theta map incomplete. Expected %d entries, got %d", 1<<(uint(len(basis)*2)), len(theta))
-	}
 
 	vs := cl.VectorSpace()
-
-	for k, v := range theta {
-		fmt.Printf("%.4x %d\n", k, v)
+	fmt.Printf(" * |")
+	for _, v := range vs {
+		fmt.Printf("%.2x|", v)
 	}
-	// Test theta properties.
+	fmt.Printf("\n")
+	for _, v1 := range vs {
+		fmt.Printf("|%.2x|", v1)
+		for _, v2 := range vs {
+			res, e := cl.ThetaByVec(v1, v2)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if res == 1 {
+				fmt.Printf("XX|")
+			} else {
+				fmt.Printf("  |")
+			}
+		}
+		fmt.Printf("\n")
+	}
 
 	// theta(0,x) == theta(x,0) == 0 (normalized cocycle)
-	for k, v := range theta {
-		if k&0xff == 0 || k&0xff00 == 0 {
-			// upper or lower 8 bits are 0, so this entry should be normalized
-			if v != 0 {
-				t.Fatalf("Theta not normalised - expected 0 for %x, got %d", k, v)
-			}
-
+	for _, v := range vs {
+		if b, _ := cl.ThetaByVec(v, 0); b != 0 {
+			t.Fatalf("Theta not normalized at %x, 0", v)
+		}
+		if b, _ := cl.ThetaByVec(0, v); b != 0 {
+			t.Fatalf("Theta not normalized at 0, %x", v)
 		}
 	}
 
 	// for all x, theta(x,x) === |x|/4
 	for i := 0; i < len(vs); i++ {
-		x := vs[i]
-		if _, ok := theta[x<<8|x]; !ok {
-			t.Fatalf("Missing entry for theta(%x,%x)", x, x)
-		}
-		if theta[x<<8|x] != (BitWeight(x)/4)%2 {
-			t.Fatalf("Expected theta(%x,%x) to be %d, got %d", x, x, (BitWeight(x)/4)%2, theta[x<<8|x])
+		if b, _ := cl.ThetaByIdx(uint(i), uint(i)); b != byte((BitWeight(vs[i])/4)%2) {
+			t.Fatalf("Expected theta(%x,%x) to be %d, got %d", i, i, (BitWeight(vs[i])/4)%2, b)
 		}
 	}
 
@@ -227,13 +225,9 @@ func TestBuildTheta(t *testing.T) {
 	for i := 0; i < len(vs); i++ {
 		for j := 0; j < len(vs); j++ {
 			x, y := vs[i], vs[j]
-			if _, ok := theta[x<<8|y]; !ok {
-				t.Fatalf("Missing entry for theta(%x,%x)", x, y)
-			}
-			if _, ok := theta[y<<8|x]; !ok {
-				t.Fatalf("Missing entry for theta(%x,%x)", y, x)
-			}
-			lhs := (theta[x<<8|y] + theta[y<<8|x]) % 2
+			a, _ := cl.ThetaByIdx(uint(i), uint(j))
+			b, _ := cl.ThetaByIdx(uint(j), uint(i))
+			lhs := uint((a + b) % 2)
 			rhs := (BitWeight(x&y) / 2) % 2
 			if rhs != lhs {
 				t.Fatalf("Expected theta(%x,%x) + theta(%x,%x) to be %d, got %d", x, y, y, x, rhs, lhs)
@@ -246,26 +240,18 @@ func TestBuildTheta(t *testing.T) {
 		for j := 0; j < len(vs); j++ {
 			for k := 0; k < len(vs); k++ {
 				x, y, z := vs[i], vs[j], vs[k]
-				if _, ok := theta[x<<8|y]; !ok {
-					t.Fatalf("Missing entry for theta(%x,%x)", x, y)
-				}
-				if _, ok := theta[(x^y)<<8|z]; !ok {
-					t.Fatalf("Missing entry for theta(%x,%x)", (x ^ y), z)
-				}
-				if _, ok := theta[y<<8|z]; !ok {
-					t.Fatalf("Missing entry for theta(%x,%x)", y, z)
-				}
-				if _, ok := theta[x<<8|(y^z)]; !ok {
-					t.Fatalf("Missing entry for theta(%x,%x)", x, (y ^ z))
-				}
-				lhs := (theta[x<<8|y] + theta[(x^y)<<8|z] + theta[y<<8|z] + theta[x<<8|(y^z)]) % 2
-				rhs := (BitWeight(x & y & z)) % 2
+				a, _ := cl.ThetaByVec(x, y)
+				b, _ := cl.ThetaByVec(x^y, z)
+				c, _ := cl.ThetaByVec(y, z)
+				d, _ := cl.ThetaByVec(x, y^z)
+				lhs := (a + b + c + d) % 2
+				rhs := byte((BitWeight(x & y & z)) % 2)
 				if rhs != lhs {
 					t.Errorf("(x,y - %x,%x): %d (x^y,z - %x,%x): %d (x,y^z - %x,%x): %d (y,z - %x,%x): %d\n",
-						x, y, theta[x<<8|y],
-						x^y, z, theta[(x^y)<<8|z],
-						x, y^z, theta[y<<8|z],
-						y, z, theta[x<<8|(y^z)])
+						x, y, a,
+						x^y, z, b,
+						x, y^z, c,
+						y, z, d)
 					t.Fatalf("Error in triple identity for %x %x %x, Expected %d, got %d", x, y, z, rhs, lhs)
 				}
 			}

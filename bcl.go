@@ -2,8 +2,8 @@ package codeloops
 
 import (
 	"fmt"
+	"github.com/nigelredding/BitString"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -59,6 +59,9 @@ type CL struct {
 	basis    []uint
 	basisLen uint // elems in the basis
 	size     uint // elems in the loop
+	theta    *Bitstring.Bitstring
+	vs       []uint
+	vm       map[uint]uint
 }
 
 // CLElem is one element of a loop. It consists of a signed vector in the
@@ -78,6 +81,9 @@ func NewCL(basis []uint) (cl *CL, e error) {
 	cl.basis = basis
 	cl.basisLen = uint(len(basis))
 	cl.size = 1 << cl.basisLen
+	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
+	cl.vs = cl.VectorSpace()
+	cl.vm = cl.VectorIdxMap()
 	return
 }
 
@@ -122,20 +128,16 @@ func (cl *CL) LoopElems() (cles []CLElem) {
 		cles = append(cles, CLElem{sgn: Neg, vec: vec})
 
 	}
-	// for i := uint(0); i < cl.size; i++ {
-	// 	ipos, _ := cl.NewCLElem(i, Pos)
-	// 	cles = append(cles, *ipos)
-	// }
-	// for i := uint(0); i < cl.size; i++ {
-	// 	ineg, _ := cl.NewCLElem(i, Neg)
-	// 	cles = append(cles, *ineg)
-	// }
 	return
 }
 
 func (cl *CL) VectorSpace() (vecs []uint) {
+
+	if cl.vs != nil {
+		return cl.vs
+	}
+
 	x := uint(0)
-	set := map[uint]struct{}{}
 	for i := uint(0); i < cl.size; i++ {
 		x = i
 		vec := uint(0)
@@ -145,12 +147,21 @@ func (cl *CL) VectorSpace() (vecs []uint) {
 			}
 			x >>= 1
 		}
-		set[vec] = struct{}{}
-	}
-	for vec, _ := range set {
 		vecs = append(vecs, vec)
 	}
-	sort.Slice(vecs, func(i, j int) bool { return vecs[i] < vecs[j] })
+	return
+}
+
+func (cl *CL) VectorIdxMap() (m map[uint]uint) {
+
+	if cl.vm != nil {
+		return cl.vm
+	}
+
+	m = make(map[uint]uint)
+	for i, v := range cl.VectorSpace() {
+		m[v] = uint(i)
+	}
 	return
 }
 
@@ -218,90 +229,138 @@ func (res *CLElem) Mul(x, y *CLElem) *CLElem {
 	return res
 }
 
-func makeJoinFunc(len uint) func(uint, uint) uint {
-	f := func(a, b uint) uint {
-		return (a << len) | b
+func (cl *CL) setThetaByVec(v1, v2, val uint) error {
+	i1, ok := cl.vm[v1]
+	if !ok {
+		return fmt.Errorf("Vector %x not in vector space", v1)
 	}
-	return f
+	i2, ok := cl.vm[v2]
+	if !ok {
+		return fmt.Errorf("Vector %x not in vector space", v1)
+	}
+	if i1 > 1<<cl.basisLen || i2 > 1<<cl.basisLen {
+		return fmt.Errorf("[!Internal!] Args to setThetaByVec (%x, %x) overflow bitstring of len %d", v1, v2, cl.size*cl.size)
+	}
+	if val > 0 {
+		cl.theta.SetBit(int(i1<<cl.basisLen | i2))
+	}
+	return nil
 }
 
-func (cl *CL) buildTheta2() (map[uint]uint, error) {
+func (cl *CL) ThetaByVec(v1, v2 uint) (byte, error) {
 
-	join := makeJoinFunc(8) // HAX!
-	theta := make(map[uint]uint)
+	if cl.theta == nil {
+		return 0, fmt.Errorf("Theta not initialized. Call CL.BuildTheta() first.")
+	}
+
+	i1, ok := cl.vm[v1]
+	if !ok {
+		return 0, fmt.Errorf("Vector %x not in vector space", v1)
+	}
+	i2, ok := cl.vm[v2]
+	if !ok {
+		return 0, fmt.Errorf("Vector %x not in vector space", v1)
+	}
+	if i1 > 1<<cl.basisLen || i2 > 1<<cl.basisLen {
+		return 0, fmt.Errorf("[!Internal!] Args to ThetaByVec (%x, %x) overflow bitstring of len %d", v1, v2, cl.size*cl.size)
+	}
+	return cl.theta.GetBit(int(i1<<cl.basisLen | i2)), nil
+}
+
+func (cl *CL) setThetaByIdx(i1, i2, val uint) error {
+	if i1 > 1<<cl.basisLen || i2 > 1<<cl.basisLen {
+		return fmt.Errorf("Args to setThetaByIdx (%x, %x) overflow bitstring of len %d", i1, i2, cl.size*cl.size)
+	}
+	if val > 0 {
+		cl.theta.SetBit(int(i1<<cl.basisLen | i2))
+	}
+	return nil
+}
+
+func (cl *CL) ThetaByIdx(i1, i2 uint) (byte, error) {
+
+	if cl.theta == nil {
+		return 0, fmt.Errorf("Theta not initialized. Call CL.BuildTheta() first.")
+	}
+
+	if i1 > 1<<cl.basisLen || i2 > 1<<cl.basisLen {
+		return 0, fmt.Errorf("Args to ThetaByIdx (%x, %x) overflow bitstring of len %d", i1, i2, cl.size*cl.size)
+	}
+	return cl.theta.GetBit(int(i1<<cl.basisLen | i2)), nil
+}
+
+func (cl *CL) BuildTheta() error {
+
+	// cf Griess Jr, Robert L. "Code loops." (1986), 226-7
+
 	b0 := cl.basis[0]
+	// We build a chain of subspaces V0<V1<V2...<Vk, and define Wk to be
+	// Vk+1 - Vk.
+	// Intuitively, Wk contains the vectors that will be added when we add the
+	// next basis vector bk
 
-	// basic assumptions
-	theta[join(b0, b0)] = (BitWeight(b0) / 4) % 2
-	theta[join(0, b0)] = 0
-	theta[join(b0, 0)] = 0
-	theta[0] = 0
+	// basic assumption about V0
+	e := cl.setThetaByVec(b0, b0, (BitWeight(b0)/4)%2)
+	if e != nil {
+		return e
+	}
 
 	Vk := []uint{0, b0}
 
-	for _, bi := range cl.basis[1:] {
+	for _, bk := range cl.basis[1:] {
 
-		// So that Vk+1 == Vk + Wk
+		// create Wk by combining bk with every vector in Vk
 		Wk := []uint{}
 		for _, v := range Vk {
-			Wk = append(Wk, bi^v)
+			Wk = append(Wk, bk^v)
 		}
 
-		fmt.Printf("Looping with %x. Vk: %#v Wk: %#v\n", bi, Vk, Wk)
-		// D1
+		// D1 - deduce {bk} x Vk and Vk x {bk}
 		for _, v := range Vk {
-			fmt.Printf("D1-1 - set %.4x to %d\n", join(bi, v), 0)
-			theta[join(bi, v)] = 0
-			fmt.Printf("D1-2 - set %.4x to %d\n", join(v, bi), (BitWeight(v&bi)/2)%2)
-			theta[join(v, bi)] = (BitWeight(v&bi) / 2) % 2
+			// Implicitly allow theta(bk, v) to stay set to 0, which is an arbitrary choice.
+			cl.setThetaByVec(v, bk, (BitWeight(v&bk)/2)%2)
 		}
 
-		// D2
+		// D2 - deduce {bk} x Wk and Wk x {bk}
 		for _, v := range Vk {
-			a, ok := theta[join(bi, v)]
-			if !ok {
-				return nil, fmt.Errorf("Missing entry for %x in theta in D2", join(bi, v))
+			a, e := cl.ThetaByVec(bk, v)
+			if e != nil {
+				return e
 			}
-			fmt.Printf("D2-1 - set %.4x to %d\n", join(bi, bi^v), (BitWeight(bi)/4+a)%2)
-			theta[join(bi, bi^v)] = (BitWeight(bi)/4 + a) % 2
-			fmt.Printf("D2-2 - set %.4x to %d\n", join(bi^v, bi), (BitWeight(bi&(bi^v))/2+theta[join(bi, bi^v)])%2)
-			theta[join(bi^v, bi)] = (BitWeight(bi&(bi^v))/2 + theta[join(bi, bi^v)]) % 2
+			// It looks weird that we're looping over Vk here, but remember
+			// that bk^v is an element of _Wk_ not Vk
+			cl.setThetaByVec(bk, bk^v, (BitWeight(bk)/4+uint(a))%2)
+			cl.setThetaByVec(bk^v, bk, (BitWeight(bk&(bk^v))/2+(BitWeight(bk)/4+uint(a))%2)%2)
 		}
 
-		// D3
+		// D3 - deduce Wk x Wk
 		for _, v := range Vk {
 			for _, w := range Wk {
-				a, ok := theta[join(v, bi)]
-				if !ok {
-					return nil, fmt.Errorf("Missing entry 1 for %x in theta in D3", join(v, bi))
+				a, e := cl.ThetaByVec(v, bk)
+				if e != nil {
+					return e
 				}
-				b, ok := theta[join(v, bi^w)]
-				if !ok {
-					return nil, fmt.Errorf("Missing entry 2 for %x in theta in D3", join(v, bi^w))
+				b, e := cl.ThetaByVec(v, bk^w)
+				if e != nil {
+					return e
 				}
-				c, ok := theta[join(w, bi)]
-				if !ok {
-					return nil, fmt.Errorf("Missing entry 3 for %x in theta in D3", join(w, bi))
+				c, e := cl.ThetaByVec(w, bk)
+				if e != nil {
+					return e
 				}
-				fmt.Printf("D3- set %.4x to %d\n", join(w, bi^v), (BitWeight(v&w)/2+a+b+c)%2)
-
-				theta[join(w, bi^v)] = (BitWeight(v&w)/2 + a + b + c) % 2
+				cl.setThetaByVec(w, bk^v, (BitWeight(v&w)/2+uint(a)+uint(b)+uint(c))%2)
 			}
 		}
 
-		// D4
+		// D4 - deduce Wk x Vk and Vk x Wk
 		for _, w := range Wk {
 			for _, v := range Vk {
-				a, ok := theta[join(w, v^w)]
-				if !ok {
-					return nil, fmt.Errorf("Missing entry for %x in theta in D4", join(w, v^w))
+				a, e := cl.ThetaByVec(w, v^w)
+				if e != nil {
+					return e
 				}
-				fmt.Printf("w: %.4x v: %.4x w^v: %.4x a: %d (theta(%.4x) bw w/4 %d \n", w, v, w^v, a, join(w, v^w), BitWeight(w)/4)
-				fmt.Printf("D4-1 set %.4x to %d\n", join(w, v), ((BitWeight(w)/4)+a)%2)
-				fmt.Printf("D4-2 set %.4x to %d\n", join(v, w), (BitWeight(v&w)/2+theta[join(w, v)])%2)
-
-				theta[join(w, v)] = ((BitWeight(w) / 4) + a) % 2
-				theta[join(v, w)] = (BitWeight(v&w)/2 + theta[join(w, v)]) % 2
+				cl.setThetaByVec(w, v, (BitWeight(w)/4+uint(a))%2)
+				cl.setThetaByVec(v, w, (BitWeight(v&w)/2+(BitWeight(w)/4+uint(a))%2)%2)
 			}
 		}
 
@@ -309,88 +368,7 @@ func (cl *CL) buildTheta2() (map[uint]uint, error) {
 
 	}
 
-	return theta, nil
-}
-
-func (cl *CL) buildTheta() map[uint]uint {
-	// Theta is a map from 2 code elems to 0 or 1 - ie if we have 16 code
-	// elems there are 256 possible theta inputs. A basis of length 4
-	// generates 16 vectors in the code space, so we need (2**basisLen)**2 map
-	// entries.
-
-	// this will need to be refactored into a bitstring
-	join := makeJoinFunc(8) // HAX!
-	theta := make(map[uint]uint)
-	v0 := cl.basis[0]
-
-	// basic assumptions
-	theta[join(v0, v0)] = (BitWeight(v0) / 4) % 2
-	theta[join(0, v0)] = 0
-	theta[join(v0, 0)] = 0
-	theta[0] = 0
-
-	workingBasis := []uint{v0}
-	tmpCL, _ := NewCL(workingBasis)
-	workingSpace := tmpCL.VectorSpace()
-
-	// Build up the theta map. We know that certain identities must hold for
-	// the theta properties to be satisfied, so we solve those constraints by
-	// adding basis vectors one by one and building the map inductively
-	// (iteratively)
-	for _, vi := range cl.basis[1:] {
-
-		// D1
-		for i := 0; i < len(workingSpace); i++ {
-			x := workingSpace[i]
-			theta[join(vi, x)] = 0 // an arbitrary choice. The rest must follow.
-			theta[join(x, vi)] = (BitWeight(x&vi) / 2) % 2
-		}
-
-		// D2
-		for i := 0; i < len(workingSpace); i++ {
-			x := workingSpace[i]
-			theta[join(vi, vi^x)] = ((BitWeight(vi)) / 4) % 2
-			theta[join(vi^x, vi)] = (BitWeight(vi)/4 + BitWeight(vi&(vi^x))/2) % 2
-		}
-
-		// D3
-		for i := 0; i < len(workingSpace); i++ {
-			for j := 0; j < len(workingSpace); j++ {
-				x, y := workingSpace[i], workingSpace[j]
-
-				thetaxy, ok := theta[join(x, y)]
-				if !ok {
-					panic("missing entry in theta")
-				}
-
-				theta[join(vi^x, vi^y)] = (BitWeight(y&(vi^x))/2 +
-					BitWeight(y&vi)/2 +
-					thetaxy +
-					BitWeight(vi)/4 +
-					BitWeight(vi&(vi^x))/2) % 2
-			}
-		}
-
-		// D4
-		for i := 0; i < len(workingSpace); i++ {
-			for j := 0; j < len(workingSpace); j++ {
-				x, y := workingSpace[i], workingSpace[j]
-				thetvixvixy, ok := theta[join(vi^x, vi^x^y)]
-				if !ok {
-					panic("missing entry in theta")
-				}
-				theta[join(vi^x, y)] = (BitWeight(vi^x)/4 + thetvixvixy) % 2
-				theta[join(y, vi^x)] = (BitWeight(y&(vi^x))/2 + BitWeight(vi^x)/4 + thetvixvixy) % 2
-			}
-		}
-
-		workingBasis = append(workingBasis, vi)
-		tmpCL, _ = NewCL(workingBasis)
-		workingSpace = tmpCL.VectorSpace()
-
-	}
-	return theta
-
+	return nil
 }
 
 func (c *CLElem) String() string {
