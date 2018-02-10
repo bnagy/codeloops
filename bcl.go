@@ -87,10 +87,10 @@ func NewCL(basis []uint) (cl *CL, e error) {
 	return
 }
 
-// NewCLElem creates a signed entry in the loop represented by CL.
-func (cl *CL) NewCLElem(x, sgn uint) (cle *CLElem, e error) {
-	if x > cl.size-1 {
-		e = fmt.Errorf("Bad size for element, can't make %d from %d element basis.", x, cl.basisLen)
+// NewElemFromIdx creates a signed entry in the loop represented by CL.
+func (cl *CL) NewElemFromIdx(idx, sgn uint) (cle *CLElem, e error) {
+	if idx > cl.size-1 {
+		e = fmt.Errorf("Bad index for vector. Can't make %d from %d element basis.", idx, cl.basisLen)
 		return
 	}
 	cle = new(CLElem)
@@ -99,17 +99,35 @@ func (cl *CL) NewCLElem(x, sgn uint) (cle *CLElem, e error) {
 		return
 	}
 	cle.sgn = sgn
-	// for each bit set in x, xor in the corresponding basis vector in the
+	// for each bit set in idx, xor in the corresponding basis vector in the
 	// code space. This embeds the entry into the larger ambient space. Eg the
 	// Hamming basis allows a 4 bit x, and produces a vec in 8 bit space. Note
 	// that all of this is being trivially embedded again into 64 bits so that
 	// we can use simple machine arithmetic. That doesn't effect the maths.
 	for bitPos := uint(0); bitPos < cl.basisLen; bitPos++ {
-		if x&1 == 1 {
+		if idx&1 == 1 {
 			cle.vec ^= cl.basis[bitPos]
 		}
-		x >>= 1
+		idx >>= 1
 	}
+	return
+}
+
+// NewElem creates a signed entry in the loop represented by CL.
+func (cl *CL) NewElem(vec, sgn uint) (cle *CLElem, e error) {
+
+	_, ok := cl.vm[vec]
+	if !ok {
+		e = fmt.Errorf("Vector %x is not in the underlying space", vec)
+		return
+	}
+	cle = new(CLElem)
+	if sgn > 1 {
+		e = fmt.Errorf("Bad sign value %d. (Suggestion: use the constants cl.Pos and cl.Neg)", sgn)
+		return
+	}
+	cle.vec = vec
+	cle.sgn = sgn
 	return
 }
 
@@ -122,11 +140,12 @@ func (cl *CL) LoopElems() (cles []CLElem) {
 	// loop vectors (and not the signs) we can just pull out the first half of
 	// them elems and ignore cle.sgn
 	for _, vec := range cl.VectorSpace() {
-		cles = append(cles, CLElem{sgn: Pos, vec: vec})
+		cle, _ := cl.NewElem(vec, Pos)
+		cles = append(cles, *cle)
 	}
 	for _, vec := range cl.VectorSpace() {
-		cles = append(cles, CLElem{sgn: Neg, vec: vec})
-
+		cle, _ := cl.NewElem(vec, Neg)
+		cles = append(cles, *cle)
 	}
 	return
 }
@@ -206,27 +225,24 @@ func (cl *CL) VerifyMoufang() (e error) {
 	return
 }
 
-func (cl *CL) VerifyMoufangSlow() (e error) {
-	e = cl.checkMoufangParallelSlow()
-	return
-}
-
-// TODO this is rubbish
-func sigma(x, y uint) uint {
-	return (BitWeight(x&y) >> 1) & 1
-}
-
 // Mul performs "multiplication" (the loop action) in the loop.
-func (res *CLElem) Mul(x, y *CLElem) *CLElem {
+func (cl *CL) Mul(x, y, res *CLElem) (*CLElem, error) {
 	// this is the sigma function that maps from C^2 -> {0,1}
-	res.sgn = x.sgn ^ y.sgn ^ sigma(x.vec, y.vec)
+	if cl.theta == nil {
+		cl.BuildTheta()
+	}
+	t, err := cl.ThetaByVec(x.vec, y.vec)
+	if err != nil {
+		return nil, err
+	}
+	res.sgn = x.sgn ^ y.sgn ^ t
 	// this is addition in the ambient vector field. Because it has
 	// characteristic 2, addition is xor. The fact that the loop vectors are
 	// closed under ^ is a property of the codes. EG the 16 Hamming codewords
 	// are floating in 8 bit space, but any combination of them under XOR
 	// produces another of the same 16 codewords.
 	res.vec = x.vec ^ y.vec
-	return res
+	return res, nil
 }
 
 func (cl *CL) setThetaByVec(v1, v2, val uint) error {
@@ -247,8 +263,7 @@ func (cl *CL) setThetaByVec(v1, v2, val uint) error {
 	return nil
 }
 
-func (cl *CL) ThetaByVec(v1, v2 uint) (byte, error) {
-
+func (cl *CL) ThetaByVec(v1, v2 uint) (uint, error) {
 	if cl.theta == nil {
 		return 0, fmt.Errorf("Theta not initialized. Call CL.BuildTheta() first.")
 	}
@@ -264,7 +279,7 @@ func (cl *CL) ThetaByVec(v1, v2 uint) (byte, error) {
 	if i1 > 1<<cl.basisLen || i2 > 1<<cl.basisLen {
 		return 0, fmt.Errorf("[!Internal!] Args to ThetaByVec (%x, %x) overflow bitstring of len %d", v1, v2, cl.size*cl.size)
 	}
-	return cl.theta.GetBit(int(i1<<cl.basisLen | i2)), nil
+	return uint(cl.theta.GetBit(int(i1<<cl.basisLen | i2))), nil
 }
 
 func (cl *CL) setThetaByIdx(i1, i2, val uint) error {
@@ -277,7 +292,7 @@ func (cl *CL) setThetaByIdx(i1, i2, val uint) error {
 	return nil
 }
 
-func (cl *CL) ThetaByIdx(i1, i2 uint) (byte, error) {
+func (cl *CL) ThetaByIdx(i1, i2 uint) (uint, error) {
 
 	if cl.theta == nil {
 		return 0, fmt.Errorf("Theta not initialized. Call CL.BuildTheta() first.")
@@ -286,7 +301,7 @@ func (cl *CL) ThetaByIdx(i1, i2 uint) (byte, error) {
 	if i1 > 1<<cl.basisLen || i2 > 1<<cl.basisLen {
 		return 0, fmt.Errorf("Args to ThetaByIdx (%x, %x) overflow bitstring of len %d", i1, i2, cl.size*cl.size)
 	}
-	return cl.theta.GetBit(int(i1<<cl.basisLen | i2)), nil
+	return uint(cl.theta.GetBit(int(i1<<cl.basisLen | i2))), nil
 }
 
 func (cl *CL) BuildTheta() error {
@@ -391,98 +406,8 @@ type WorkUnit struct {
 	Wg       *sync.WaitGroup
 }
 
-func moufangParallelWorker(work *WorkUnit) {
-
-	defer work.Wg.Done()
-
-	// Preallocate the memory for the multiplication elems
-	x, y, z := new(CLElem), new(CLElem), new(CLElem)
-
-	// Iterate! Treat a bit string as 3 concatenated element indices, and then
-	// use those to select the appropriate real element out of the work.Elems
-	// slice.
-
-	// Create masks to pull the element indicies from the counter
-	elemSz := int(work.BaseCL.basisLen)
-	zeroChunk := strings.Repeat("0", elemSz)
-	oneChunk := strings.Repeat("1", elemSz)
-	yMaskStr := zeroChunk + oneChunk + zeroChunk
-	zMaskStr := zeroChunk + zeroChunk + oneChunk
-	yMask, _ := strconv.ParseUint(yMaskStr, 2, 0)
-	zMask, _ := strconv.ParseUint(zMaskStr, 2, 0)
-
-	for combinedElems := work.StartIdx; combinedElems < work.StopIdx; combinedElems++ {
-		x = &work.Elems[combinedElems>>uint(elemSz*2)]             // top elemSz bits as an index
-		y = &work.Elems[(combinedElems&uint(yMask))>>uint(elemSz)] // middle elemSz bits ...
-		z = &work.Elems[combinedElems&uint(zMask)]                 // etc
-
-		// This is a Moufang identity expressed in XOR. If:
-		// sigma(x,z)sigma(y,xz)sigma(x,xyz) == sigma(x,y)sigma(xy,x)sigma(y,z)
-		// then the Moufang property holds.
-		if sigma(x.vec, z.vec)^
-			sigma(y.vec, x.vec^z.vec)^
-			sigma(x.vec, x.vec^y.vec^z.vec)^
-			sigma(x.vec, y.vec)^
-			sigma(x.vec^y.vec, x.vec)^
-			sigma(y.vec, z.vec) != 0 {
-			work.Failures <- []*CLElem{x, y, z}
-			return // Assuming all the other workers also exit early, we'll be OK.
-			// Worst case, we run through ~all the tests, which is still twice
-			// as fast as using an abort channel via a select() loop here.
-		}
-	}
-}
-
-func (cl *CL) checkMoufangParallel() (e error) {
-
-	elems := cl.LoopElems()
-
-	wg := &sync.WaitGroup{}
-	failures := make(chan []*CLElem)
-	done := make(chan struct{})
-
-	// create and dispatch the work units. Each worker gets assigned a chunk
-	// of the whole range divided by the number of logical CPUs.
-	elemSz := cl.basisLen
-	lim := 1 << (elemSz * 3)
-	step := lim / runtime.NumCPU() // more or less
-	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
-		// create this work unit, and start the worker
-		wg.Add(1)
-		thisStart := uint(step * cpu)
-		thisStop := uint(0)
-		if cpu+1 == runtime.NumCPU() { // last cpu gets the slack
-			thisStop = uint(lim)
-		} else {
-			thisStop = uint((cpu + 1) * step)
-		}
-		wu := &WorkUnit{cl, elems, thisStart, thisStop, failures, wg}
-		go moufangParallelWorker(wu)
-	}
-
-	go func() {
-		// This goroutine will wait for all the workers to finish, then close
-		// the done channel, which aborts the main select loop.
-		wg.Wait()
-		close(done)
-	}()
-
-loop:
-	for {
-		select {
-		case fail := <-failures:
-			// there could be many errors, we just keep the last one.
-			e = fmt.Errorf("Failed Moufang Identity for %s %s %s", fail[0].String(), fail[1].String(), fail[2].String())
-		case <-done:
-			// will fire when the done chan is closed (all workers have returned)
-			break loop
-		}
-	}
-	return
-}
-
 // Older and slower, but uses full Mul() calls. Useful in case of bugs.
-func moufangParallelWorkerSlow(work *WorkUnit) {
+func moufangParallelWorker(work *WorkUnit) {
 
 	defer work.Wg.Done()
 
@@ -513,16 +438,18 @@ func moufangParallelWorkerSlow(work *WorkUnit) {
 		z = &work.Elems[combinedElems&uint(zMask)]           // etc
 
 		// LHS 1
-		zy.Mul(z, y)
-		x_zy.Mul(x, zy)
-		z__x_zy.Mul(z, x_zy)
+		work.BaseCL.Mul(z, y, zy)
+		work.BaseCL.Mul(x, zy, x_zy)
+		work.BaseCL.Mul(z, x_zy, z__x_zy)
 
 		//RHS 1
-		zx.Mul(z, x)
-		zx_z.Mul(zx, z)
-		zx_z__y.Mul(zx_z, y)
+		work.BaseCL.Mul(z, x, zx)
+		work.BaseCL.Mul(zx, z, zx_z)
+		work.BaseCL.Mul(zx_z, y, zx_z__y)
 
 		// The vector ops are associative, the only thing that can mismatch is the sign.
+		fmt.Printf("%s %s %s --> %s vs %s\n", x, y, z, z__x_zy, zx_z__y)
+
 		if z__x_zy.sgn != zx_z__y.sgn {
 			work.Failures <- []*CLElem{x, y, z}
 		}
@@ -531,10 +458,9 @@ func moufangParallelWorkerSlow(work *WorkUnit) {
 
 }
 
-func (cl *CL) checkMoufangParallelSlow() (e error) {
+func (cl *CL) checkMoufangParallel() (e error) {
 
 	elems := cl.LoopElems()
-
 	wg := &sync.WaitGroup{}
 	failures := make(chan []*CLElem)
 	done := make(chan struct{})
@@ -551,7 +477,7 @@ func (cl *CL) checkMoufangParallelSlow() (e error) {
 	elemSz := cl.basisLen + 1
 	lim := 1 << (elemSz * 3)
 	step := lim / runtime.NumCPU() // more or less
-	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
+	for cpu := 0; cpu < 1; cpu++ {
 		// create this work unit, and start the worker
 		wg.Add(1)
 		thisStart := uint(step * cpu)
@@ -562,7 +488,7 @@ func (cl *CL) checkMoufangParallelSlow() (e error) {
 			thisStop = uint((cpu + 1) * step)
 		}
 		wu := &WorkUnit{cl, elems, thisStart, thisStop, failures, wg}
-		go moufangParallelWorkerSlow(wu)
+		go moufangParallelWorker(wu)
 	}
 
 	// Wait for the work to finish, or bail immediately if one of the workers

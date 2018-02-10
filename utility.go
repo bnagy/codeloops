@@ -20,7 +20,7 @@ func SetCombinationsWithReplacement(setSz, subsetSz uint, f func([]uint) error) 
 	// For each combination of subsetSz elements out of setSz
 	// call the function f passing a list of subsetSz integers in 0-setSz
 	// with repetitions
-	// If f returns an error then we bail early.
+	// BN, modified: If f returns an error then we bail early.
 	indices := make([]uint, subsetSz)
 	err := f(indices)
 	if err != nil {
@@ -49,6 +49,7 @@ loop:
 	}
 }
 
+// based on https://filippo.io/callback-based-SetCombinationsWithoutReplacement-in-go/
 func SetCombinationsWithoutReplacement(setSz, subsetSz uint, f func([]uint)) {
 	// For each combination of subsetSz elements out of setSz
 	// call the function f passing a list of subsetSz integers in 0-setSz

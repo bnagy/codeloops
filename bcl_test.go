@@ -95,6 +95,7 @@ func TestVerifyHammingMoufangGood(t *testing.T) {
 
 func TestVerifyHammingNotAssoc(t *testing.T) {
 	cl, err := NewCL(HammingBasis)
+	cl.BuildTheta()
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
@@ -105,10 +106,10 @@ func TestVerifyHammingNotAssoc(t *testing.T) {
 		a, b, c := &elems[triple[0]], &elems[triple[1]], &elems[triple[2]]
 		a_bc, ab_c := new(CLElem), new(CLElem)
 
-		a_bc.Mul(b, c)
-		a_bc.Mul(a, a_bc)
-		ab_c.Mul(a, b)
-		ab_c.Mul(ab_c, c)
+		cl.Mul(b, c, a_bc)
+		cl.Mul(a, a_bc, a_bc)
+		cl.Mul(a, b, ab_c)
+		cl.Mul(ab_c, c, ab_c)
 
 		if a_bc.sgn != ab_c.sgn {
 			isAssoc = false
@@ -133,16 +134,16 @@ func TestVerifyHammingMoufangBad(t *testing.T) {
 	}
 }
 
-// func TestVerifyGolayMoufangGood(t *testing.T) {
-// 	cl, err := NewCL(GolayBasis)
-// 	if err != nil {
-// 		t.Fatalf("Failed to create CL: %s", err)
-// 	}
-// 	err = cl.VerifyMoufang()
-// 	if err != nil {
-// 		t.Fatalf("Golay basis failed VerifyMoufang(): %s", err)
-// 	}
-// }
+func TestVerifyGolayMoufangGood(t *testing.T) {
+	cl, err := NewCL(GolayBasis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.VerifyMoufang()
+	if err != nil {
+		t.Fatalf("Golay basis failed VerifyMoufang(): %s", err)
+	}
+}
 
 func TestVerifyGolayMoufangBad(t *testing.T) {
 	cl, err := NewCL(badGolayBasis)
@@ -172,6 +173,7 @@ func TestListHammingVectorSpace(t *testing.T) {
 }
 
 func TestBuildTheta(t *testing.T) {
+
 	basis := HammingBasis
 	cl, err := NewCL(basis)
 	if err != nil {
@@ -182,6 +184,7 @@ func TestBuildTheta(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Print out the cocycle, for laughs.
 	vs := cl.VectorSpace()
 	fmt.Printf(" * |")
 	for _, v := range vs {
@@ -204,6 +207,9 @@ func TestBuildTheta(t *testing.T) {
 		fmt.Printf("\n")
 	}
 
+	// Verify that the cocycle is normalized, then check the axioms (S), (C),
+	// (A) from [Griess86] p. 225
+
 	// theta(0,x) == theta(x,0) == 0 (normalized cocycle)
 	for _, v := range vs {
 		if b, _ := cl.ThetaByVec(v, 0); b != 0 {
@@ -214,14 +220,14 @@ func TestBuildTheta(t *testing.T) {
 		}
 	}
 
-	// for all x, theta(x,x) === |x|/4
+	// (S) for all x, theta(x,x) === |x|/4 (all congruence is mod 2)
 	for i := 0; i < len(vs); i++ {
-		if b, _ := cl.ThetaByIdx(uint(i), uint(i)); b != byte((BitWeight(vs[i])/4)%2) {
+		if b, _ := cl.ThetaByIdx(uint(i), uint(i)); b != (BitWeight(vs[i])/4)%2 {
 			t.Fatalf("Expected theta(%x,%x) to be %d, got %d", i, i, (BitWeight(vs[i])/4)%2, b)
 		}
 	}
 
-	// for all x,y, theta(x,y) + theta(y,x) === |x&y|/2
+	// (C) for all x,y, theta(x,y) + theta(y,x) === |x&y|/2
 	for i := 0; i < len(vs); i++ {
 		for j := 0; j < len(vs); j++ {
 			x, y := vs[i], vs[j]
@@ -235,7 +241,7 @@ func TestBuildTheta(t *testing.T) {
 		}
 	}
 
-	// for all x,y,z theta(x,y) + theta(x^y,z) + theta(y,z) + theta(x,y^z) === |x&y&z|
+	// (A) for all x,y,z theta(x,y) + theta(x^y,z) + theta(y,z) + theta(x,y^z) === |x&y&z|
 	for i := 0; i < len(vs); i++ {
 		for j := 0; j < len(vs); j++ {
 			for k := 0; k < len(vs); k++ {
@@ -245,7 +251,7 @@ func TestBuildTheta(t *testing.T) {
 				c, _ := cl.ThetaByVec(y, z)
 				d, _ := cl.ThetaByVec(x, y^z)
 				lhs := (a + b + c + d) % 2
-				rhs := byte((BitWeight(x & y & z)) % 2)
+				rhs := (BitWeight(x & y & z)) % 2
 				if rhs != lhs {
 					t.Errorf("(x,y - %x,%x): %d (x^y,z - %x,%x): %d (x,y^z - %x,%x): %d (y,z - %x,%x): %d\n",
 						x, y, a,
@@ -273,13 +279,6 @@ func BenchmarkPopCntq(b *testing.B) {
 	dummy := uint(0)
 	for i := 0; i < b.N; i++ {
 		dummy |= popCntq(0xdeadbeef)
-	}
-}
-
-func BenchmarkSigma(b *testing.B) {
-	dummy := uint(0)
-	for i := 0; i < b.N; i++ {
-		dummy |= sigma(0xdeadbeef, 0xfacef00d)
 	}
 }
 
@@ -327,11 +326,11 @@ func BenchmarkMul(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create CL: %s", err)
 	}
-	x, _ := cl.NewCLElem(5, Pos)
-	y, _ := cl.NewCLElem(7, Neg)
+	x, _ := cl.NewElemFromIdx(5, Pos)
+	y, _ := cl.NewElemFromIdx(7, Neg)
 	res := new(CLElem)
 	for n := 0; n < b.N; n++ {
-		res.Mul(x, y)
+		cl.Mul(x, y, res)
 	}
 
 }
