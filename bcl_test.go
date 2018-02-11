@@ -82,20 +82,19 @@ func TestVerifyBasis(t *testing.T) {
 	}
 }
 
-func TestVerifyHammingMoufangGood(t *testing.T) {
+func TestHammingMoufang(t *testing.T) {
 	cl, err := NewCL(HammingBasis)
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
 	err = cl.VerifyMoufang()
 	if err != nil {
-		t.Fatalf("Hamming basis failed VerifyMoufang(): %s", err)
+		t.Fatalf("Hamming loop not Moufang: %s", err)
 	}
 }
 
-func TestVerifyHammingNotAssoc(t *testing.T) {
+func TestHammingNotAssoc(t *testing.T) {
 	cl, err := NewCL(HammingBasis)
-	cl.BuildTheta()
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
@@ -123,18 +122,18 @@ func TestVerifyHammingNotAssoc(t *testing.T) {
 	}
 }
 
-func TestVerifyHammingMoufangBad(t *testing.T) {
+func TestBadHammingNotMoufang(t *testing.T) {
 	cl, err := NewCL(badHammingBasis)
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
 	err = cl.VerifyMoufang()
 	if err == nil {
-		t.Fatalf("Bad Hamming basis passed VerifyMoufang(), expected it to fail.")
+		t.Fatalf("Bad Hamming basis passed Moufang test.")
 	}
 }
 
-func TestVerifyGolayMoufangGood(t *testing.T) {
+func TestGolayMoufang(t *testing.T) {
 	cl, err := NewCL(GolayBasis)
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
@@ -145,7 +144,7 @@ func TestVerifyGolayMoufangGood(t *testing.T) {
 	}
 }
 
-func TestVerifyGolayMoufangBad(t *testing.T) {
+func TestBadGolayNotMoufang(t *testing.T) {
 	cl, err := NewCL(badGolayBasis)
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
@@ -172,16 +171,12 @@ func TestListHammingVectorSpace(t *testing.T) {
 	cl.PrintVectorSpace()
 }
 
-func TestBuildTheta(t *testing.T) {
+func TestHammingTheta(t *testing.T) {
 
 	basis := HammingBasis
 	cl, err := NewCL(basis)
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
-	}
-	err = cl.BuildTheta()
-	if err != nil {
-		t.Fatal(err)
 	}
 
 	// Print out the cocycle, for laughs.
