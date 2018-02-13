@@ -3,17 +3,22 @@ package codeloops
 import (
 	"fmt"
 	"github.com/nigelredding/BitString"
+	"math/rand"
+	"time"
 )
+
+const RANDOM_THETA = true
 
 // CL is a structure which contains information about the ambient loop space
 // such as the basis.
 type CL struct {
-	basis    []uint
-	basisLen uint // elems in the basis
-	size     uint // elems in the loop
-	theta    *Bitstring.Bitstring
-	vs       []uint
-	vm       map[uint]uint
+	basis     []uint
+	basisLen  uint // elems in the basis
+	size      uint // elems in the loop
+	theta     *Bitstring.Bitstring
+	ThetaPath string
+	vs        []uint
+	vm        map[uint]uint
 }
 
 // NewCL returns a new code loop from a basis for a doubly even binary code.
@@ -224,6 +229,12 @@ func (cl *CL) setThetaByVec(v1, v2, val uint) error {
 	if i1 >= 1<<cl.basisLen || i2 >= 1<<cl.basisLen {
 		return fmt.Errorf("Args to setThetaByVec (%x, %x) overflow bitstring of len %d", v1, v2, cl.size*cl.size)
 	}
+	if (v1 == v2) && (val != (BitWeight(v1)/4)%2) {
+		fmt.Printf("\t\t[xxx] %.2x %.2x == %d\n", v1, v2, val)
+	}
+	if (v1 == 0 || v2 == 0) && val != 0 {
+		fmt.Printf("\t\t[!!!] %.2x %.2x == %d\n", v1, v2, val)
+	}
 	if val > 0 {
 		cl.theta.SetBit(int(i1<<cl.basisLen | i2))
 	}
@@ -264,6 +275,8 @@ func (cl *CL) ThetaByIdx(i1, i2 uint) (uint, error) {
 
 func (cl *CL) buildTheta() error {
 
+	rand.Seed(time.Now().UnixNano())
+	path := ""
 	// cf Griess Jr, Robert L. "Code loops." (1986), 226-7
 
 	b0 := cl.basis[0]
@@ -288,10 +301,51 @@ func (cl *CL) buildTheta() error {
 			Wk = append(Wk, bk^v)
 		}
 
-		// D1 - deduce {bk} x Vk and Vk x {bk}
+		// D1 - define {bk} x Vk and deduce Vk x {bk}
 		for _, v := range Vk {
-			// Implicitly allow theta(bk, v) to stay set to 0, which is an arbitrary choice.
+			var x uint
+			if RANDOM_THETA {
+				x = uint(rand.Uint32() & 3) // a random bit
+				if x == 3 {
+					x = 1
+				} else {
+					x = 0
+				}
+			}
+			// theta(bk,0) must be 0 (normalized cocycle), anything else is up for grabs.
+			if v != 0 {
+				cl.setThetaByVec(bk, v, uint(x))
+				if x == 1 {
+					path += "1"
+				} else {
+					path += "0"
+				}
+				fmt.Printf("D1 Set %.2x %.2x to %d\n", bk, v, x)
+			} else {
+				path += "*"
+				fmt.Printf("D1 Set %.2x %.2x to %d\n", bk, v, 0)
+			}
 			cl.setThetaByVec(v, bk, (BitWeight(v&bk)/2)%2)
+			fmt.Printf("D1 Set %.2x %.2x to %d\n", v, bk, (BitWeight(v&bk)/2)%2)
+
+		}
+
+		for _, v := range Vk {
+			cl.setThetaByVec(v, bk, (BitWeight(v&bk)/2)%2)
+			fmt.Printf("D1 Set %.2x %.2x to %d\n", v, bk, (BitWeight(v&bk)/2)%2)
+
+		}
+		// D2 - deduce {bk} x Wk and Wk x {bk}
+		for _, v := range Vk {
+			a, e := cl.ThetaByVec(bk, v)
+			if e != nil {
+				return e
+			}
+			// It looks weird that we're looping over Vk here, but remember
+			// that bk^v is an element of _Wk_ not Vk
+			cl.setThetaByVec(bk, bk^v, (BitWeight(bk)/4+uint(a))%2)
+			fmt.Printf("D2 Set %.2x %.2x to %d\n", bk, bk^v, (BitWeight(bk)/4+uint(a))%2)
+
 		}
 
 		// D2 - deduce {bk} x Wk and Wk x {bk}
@@ -302,17 +356,20 @@ func (cl *CL) buildTheta() error {
 			}
 			// It looks weird that we're looping over Vk here, but remember
 			// that bk^v is an element of _Wk_ not Vk
-			cl.setThetaByVec(bk, bk^v, (BitWeight(bk)/4+uint(a))%2)
+
 			cl.setThetaByVec(bk^v, bk, (BitWeight(bk&(bk^v))/2+(BitWeight(bk)/4+uint(a))%2)%2)
+			fmt.Printf("D2 Set %.2x %.2x to %d\n", bk^v, bk, (BitWeight(bk&(bk^v))/2+(BitWeight(bk)/4+uint(a))%2)%2)
 		}
 
 		// D3 - deduce Wk x Wk
 		for _, v := range Vk {
-			for _, w := range Wk {
-				a, e := cl.ThetaByVec(v, bk)
-				if e != nil {
-					return e
-				}
+			for _, v2 := range Vk {
+				// a, e := cl.ThetaByVec(v, bk)
+				// if e != nil {
+				// 	return e
+				// }
+				w := bk ^ v2
+				a := (BitWeight(v&bk) / 2) % 2
 				b, e := cl.ThetaByVec(v, bk^w)
 				if e != nil {
 					return e
@@ -321,25 +378,45 @@ func (cl *CL) buildTheta() error {
 				if e != nil {
 					return e
 				}
-				cl.setThetaByVec(w, bk^v, (BitWeight(v&w)/2+uint(a)+uint(b)+uint(c))%2)
+				res := (BitWeight(v&(w))/2 + uint(a) + uint(b) + uint(c)) % 2
+				cl.setThetaByVec(w, bk^v, res)
+				fmt.Printf("D3 Set %.2x %.2x to %d\n", w, bk^v, res)
+
 			}
 		}
 
 		// D4 - deduce Wk x Vk and Vk x Wk
-		for _, w := range Wk {
+		for _, v2 := range Vk {
 			for _, v := range Vk {
+				w := bk ^ v2
 				a, e := cl.ThetaByVec(w, v^w)
 				if e != nil {
 					return e
 				}
 				cl.setThetaByVec(w, v, (BitWeight(w)/4+uint(a))%2)
+				fmt.Printf("D4 Set %.2x %.2x to %d\n", w, v, (BitWeight(w)/4+uint(a))%2)
+
+			}
+		}
+
+		// D4 - deduce Wk x Vk and Vk x Wk
+		for _, v2 := range Vk {
+			for _, v := range Vk {
+				w := bk ^ v2
+				a, e := cl.ThetaByVec(w, v^w)
+				if e != nil {
+					return e
+				}
+
 				cl.setThetaByVec(v, w, (BitWeight(v&w)/2+(BitWeight(w)/4+uint(a))%2)%2)
+				fmt.Printf("D4 Set %.2x %.2x to %d\n", v, w, (BitWeight(v&w)/2+(BitWeight(w)/4+uint(a))%2)%2)
 			}
 		}
 
 		Vk = append(Vk, Wk...)
 
 	}
-
+	fmt.Printf("Set path to %s\n", path)
+	cl.ThetaPath = path
 	return nil
 }
