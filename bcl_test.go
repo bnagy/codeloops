@@ -133,6 +133,8 @@ func TestBadHammingNotMoufang(t *testing.T) {
 	}
 }
 
+// This is commented out because it is VERY SLOW
+//
 // func TestGolayMoufang(t *testing.T) {
 // 	cl, err := NewCL(GolayBasis)
 // 	if err != nil {
@@ -173,38 +175,16 @@ func TestListHammingVectorSpace(t *testing.T) {
 
 func TestHammingTheta(t *testing.T) {
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		basis := HammingBasis
 		cl, err := NewCL(basis)
 		if err != nil {
 			t.Fatalf("Failed to create CL: %s", err)
 		}
-
-		// Print out the cocycle, for laughs.
 		vs := cl.VectorSpace()
-		fmt.Printf(" * |")
-		for _, v := range vs {
-			fmt.Printf("%.2x|", v)
-		}
-		fmt.Printf("\n")
-		for _, v1 := range vs {
-			fmt.Printf("|%.2x|", v1)
-			for _, v2 := range vs {
-				res, e := cl.ThetaByVec(v1, v2)
-				if e != nil {
-					t.Fatal(e)
-				}
-				if res == 1 {
-					fmt.Printf("## ")
-				} else {
-					fmt.Printf("   ")
-				}
-			}
-			fmt.Printf("\n")
-		}
 
 		// Verify that the cocycle is normalized, then check the axioms (S), (C),
-		// (A) from [Griess86] p. 225
+		// (A) from [Gri86] p. 225
 
 		// theta(0,x) == theta(x,0) == 0 (normalized cocycle)
 		for _, v := range vs {
@@ -256,6 +236,73 @@ func TestHammingTheta(t *testing.T) {
 							y, z, d)
 						t.Fatalf("Error in triple identity for %x %x %x, Expected %d, got %d", x, y, z, rhs, lhs)
 					}
+				}
+			}
+		}
+	}
+}
+
+func TestGolayTheta(t *testing.T) {
+
+	basis := GolayBasis
+	cl, err := NewCL(basis)
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	vs := cl.VectorSpace()
+
+	// Verify that the cocycle is normalized, then check the axioms (S), (C),
+	// (A) from [Gri86] p. 225
+
+	// theta(0,x) == theta(x,0) == 0 (normalized cocycle)
+	for _, v := range vs {
+		if b, _ := cl.ThetaByVec(v, 0); b != 0 {
+			t.Fatalf("Theta not normalized at %x, 0", v)
+		}
+		if b, _ := cl.ThetaByVec(0, v); b != 0 {
+			t.Fatalf("Theta not normalized at 0, %x", v)
+		}
+	}
+
+	// (S) for all x, theta(x,x) === |x|/4 (all congruence is mod 2)
+	for i := 0; i < len(vs); i++ {
+		if b, _ := cl.ThetaByIdx(uint(i), uint(i)); b != (BitWeight(vs[i])/4)%2 {
+			t.Fatalf("Expected theta(v%d,v%d) to be %d, got %d", i-1, i-1, (BitWeight(vs[i])/4)%2, b)
+		}
+	}
+
+	// (C) for all x,y, theta(x,y) + theta(y,x) === |x&y|/2
+	for i := 0; i < len(vs); i++ {
+		for j := 0; j < len(vs); j++ {
+			x, y := vs[i], vs[j]
+			a, _ := cl.ThetaByIdx(uint(i), uint(j))
+			b, _ := cl.ThetaByIdx(uint(j), uint(i))
+			lhs := uint((a + b) % 2)
+			rhs := (BitWeight(x&y) / 2) % 2
+			if rhs != lhs {
+				t.Fatalf("Expected theta(%x,%x) + theta(%x,%x) to be %d, got %d", x, y, y, x, rhs, lhs)
+			}
+		}
+	}
+
+	// (A) for all x,y,z theta(x,y) + theta(x^y,z) + theta(y,z) + theta(x,y^z) === |x&y&z|
+	for i := 0; i < len(vs); i++ {
+		for j := 0; j < len(vs); j++ {
+			for k := 0; k < len(vs); k++ {
+				x, y, z := vs[i], vs[j], vs[k]
+				a, _ := cl.ThetaByVec(x, y)
+				b, _ := cl.ThetaByVec(x^y, z)
+				c, _ := cl.ThetaByVec(y, z)
+				d, _ := cl.ThetaByVec(x, y^z)
+				lhs := (a + b + c + d) % 2
+				rhs := (BitWeight(x & y & z)) % 2
+				if rhs != lhs {
+					t.Errorf("(x,y - %x,%x): %d (x^y,z - %x,%x): %d (x,y^z - %x,%x): %d (y,z - %x,%x): %d\n",
+						x, y, a,
+						x^y, z, b,
+						x, y^z, c,
+						y, z, d)
+					t.Fatalf("Error in triple identity for %x %x %x, Expected %d, got %d", x, y, z, rhs, lhs)
 				}
 			}
 		}
