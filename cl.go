@@ -22,18 +22,26 @@ type CL struct {
 	vm        map[uint]uint
 }
 
+type CLParams struct {
+	Basis []uint
+	Theta uint
+	Seed  int64
+}
+
+const RandomTheta = 0xffffffff
+
 // NewCL returns a new code loop from a basis for a doubly even binary code.
 // The basis is NOT CHECKED, because the verification is performance-heavy. To
 // verify several things about the code loop, use Verify().
-func NewCL(basis []uint) (cl *CL, e error) {
+func NewCL(p CLParams) (cl *CL, e error) {
 	cl = new(CL)
-	cl.basis = basis
-	cl.basisLen = uint(len(basis))
+	cl.basis = p.Basis
+	cl.basisLen = uint(len(p.Basis))
 	cl.size = 1 << cl.basisLen
 	cl.vs = cl.VectorSpace()
 	cl.vm = cl.VectorIdxMap()
 	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
-	e = cl.buildTheta()
+	e = cl.buildTheta(p.Theta, p.Seed)
 	return
 }
 
@@ -265,14 +273,23 @@ func (cl *CL) ThetaByIdx(i1, i2 uint) (uint, error) {
 	return uint(cl.theta.GetBit(int(i1<<cl.basisLen | i2))), nil
 }
 
-func (cl *CL) buildTheta() error {
+func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
 
 	// cf Griess Jr, Robert L. "Code loops." (1986), 226-7
 
-	if USE_SEED {
-		rand.Seed(time.Now().UnixNano())
+	i := uint(0)
+	random := false
+	if pathGiven == RandomTheta {
+		random = true
+		if seed == 0 {
+			rand.Seed(time.Now().UnixNano())
+		} else {
+			rand.Seed(seed)
+		}
 	}
-	var path uint
+	// we might not take exactly the given path. If the caller supplies a 1
+	// for a position that must be 0, we ignore it.
+	var pathTaken uint
 
 	// We build a chain of subspaces V0<V1<V2...<Vk, and define Wk to be
 	// Vk+1 - Vk.
@@ -302,18 +319,20 @@ func (cl *CL) buildTheta() error {
 			var x uint
 			// theta(bk,0) must be 0 (normalized cocycle), but anything else is up for grabs.
 			if v != 0 {
-				if RANDOM_THETA {
+				if random {
 					x = uint(rand.Uint32() & 1) // a random bit
+				} else {
+					x = pathGiven & 1
 				}
-				path = (path << 1) | x
 				cl.setThetaByVec(bk, v, x)
 				cl.setThetaByVec(v, bk, ((BitWeight(v&bk)/2)+x)%2)
 			} else {
-				path <<= 1
 				// theta(bk,v) is implicitly 'set' to 0 in the bitstring
 				cl.setThetaByVec(v, bk, (BitWeight(v&bk)/2)%2) // x is forced to be 0
 			}
-
+			pathGiven >>= 1
+			pathTaken |= x << i
+			i++
 		}
 
 		// D2 - deduce {bk} x Wk and Wk x {bk}
@@ -368,6 +387,6 @@ func (cl *CL) buildTheta() error {
 		Vk = append(Vk, Wk...)
 
 	}
-	cl.ThetaPath = fmt.Sprintf("0x%x", path)
+	cl.ThetaPath = fmt.Sprintf("0x%x", pathTaken)
 	return nil
 }
