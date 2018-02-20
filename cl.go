@@ -7,8 +7,7 @@ import (
 	"time"
 )
 
-const RANDOM_THETA = true
-const USE_SEED = true
+// [Gri86] - Griess Jr, Robert L. "Code loops." (1986)
 
 // CL is a structure which contains information about the ambient loop space
 // such as the basis.
@@ -31,8 +30,6 @@ type CLParams struct {
 const RandomTheta = 0xffffffff
 
 // NewCL returns a new code loop from a basis for a doubly even binary code.
-// The basis is NOT CHECKED, because the verification is performance-heavy. To
-// verify several things about the code loop, use Verify().
 func NewCL(p CLParams) (cl *CL, e error) {
 	cl = new(CL)
 	cl.basis = p.Basis
@@ -192,7 +189,9 @@ func (cl *CL) VerifyBasis() (e error) {
 	return
 }
 
-func (cl *CL) VerifyMoufang() (e error) {
+func (cl *CL) verifyMoufang() (e error) {
+
+	// This version is slow, but works from the basic definition of a Moufang Loop
 
 	elems := cl.LoopElems()
 	x, y, z := new(CLElem), new(CLElem), new(CLElem)
@@ -226,6 +225,59 @@ func (cl *CL) VerifyMoufang() (e error) {
 	return nil
 }
 
+func (cl *CL) verifyMoufang2() (e error) {
+
+	// This version is an order of magnitude faster, and uses an identity from [Gri86] p. 226
+	// Moufang iff t(x,y) + t (z,x) + t(x+y, z+x) = t(y,z) + t(x, y+z) + t(x+y+z, x)
+
+	vs := cl.VectorSpace()
+	var x, y, z uint
+	for i := 0; i < len(vs); i++ {
+		for j := 0; j < len(vs); j++ {
+			for k := 0; k < len(vs); k++ {
+				x, y, z = vs[i], vs[j], vs[k]
+				if (cl.thetaByVecFast(x, y)+
+					cl.thetaByVecFast(z, x)+
+					cl.thetaByVecFast(x^y, z^x))%2 !=
+					(cl.thetaByVecFast(y, z)+
+						cl.thetaByVecFast(x, y^z)+
+						cl.thetaByVecFast(x^y^z, x))%2 {
+					return fmt.Errorf("Code loop failed Moufang identity at %x, %x, %x", x, y, z)
+
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (cl *CL) IsMoufang() bool {
+	e := cl.verifyMoufang2()
+	return e == nil
+}
+
+func (cl *CL) IsAssoc() (isAssoc bool) {
+	isAssoc = true
+	elems := cl.LoopElems()
+
+	SetCombinationsWithReplacement(uint(len(elems)), 3, func(triple []uint) error {
+		a, b, c := &elems[triple[0]], &elems[triple[1]], &elems[triple[2]]
+		a_bc, ab_c := new(CLElem), new(CLElem)
+
+		cl.Mul(b, c, a_bc)
+		cl.Mul(a, a_bc, a_bc)
+		cl.Mul(a, b, ab_c)
+		cl.Mul(ab_c, c, ab_c)
+
+		if a_bc.sgn != ab_c.sgn {
+			isAssoc = false
+			return fmt.Errorf("Not assoc")
+		}
+		return nil
+	})
+	return isAssoc
+}
+
 func (cl *CL) setThetaByVec(v1, v2, val uint) error {
 	i1, ok := cl.vm[v1]
 	if !ok {
@@ -256,6 +308,10 @@ func (cl *CL) ThetaByVec(v1, v2 uint) (uint, error) {
 	return uint(cl.theta.GetBit(int(i1<<cl.basisLen | i2))), nil
 }
 
+func (cl *CL) thetaByVecFast(v1, v2 uint) uint {
+	return uint(cl.theta.GetBit(int(cl.vm[v1]<<cl.basisLen | cl.vm[v2])))
+}
+
 func (cl *CL) setThetaByIdx(i1, i2, val uint) error {
 	if i1 >= 1<<cl.basisLen || i2 >= 1<<cl.basisLen {
 		return fmt.Errorf("Args to setThetaByIdx (%x, %x) overflow bitstring of len %d", i1, i2, cl.size*cl.size)
@@ -273,9 +329,13 @@ func (cl *CL) ThetaByIdx(i1, i2 uint) (uint, error) {
 	return uint(cl.theta.GetBit(int(i1<<cl.basisLen | i2))), nil
 }
 
+func (cl *CL) thetaByIdxFast(i1, i2 uint) uint {
+	return uint(cl.theta.GetBit(int(i1<<cl.basisLen | i2)))
+}
+
 func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
 
-	// cf Griess Jr, Robert L. "Code loops." (1986), 226-7
+	// cf [Gri86] 226-7
 
 	i := uint(0)
 	random := false

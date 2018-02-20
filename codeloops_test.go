@@ -83,13 +83,28 @@ func TestVerifyBasis(t *testing.T) {
 }
 
 func TestHammingMoufang(t *testing.T) {
-	cl, err := NewCL(CLParams{Basis: HammingBasis})
-	if err != nil {
-		t.Fatalf("Failed to create CL: %s", err)
+	for i := 0; i < 1000; i++ {
+		cl, err := NewCL(CLParams{Basis: HammingBasis, Theta: RandomTheta})
+		if err != nil {
+			t.Fatalf("Failed to create CL: %s", err)
+		}
+		err = cl.verifyMoufang()
+		if err != nil {
+			t.Fatalf("Hamming loop not Moufang: %s", err)
+		}
 	}
-	err = cl.VerifyMoufang()
-	if err != nil {
-		t.Fatalf("Hamming loop not Moufang: %s", err)
+}
+
+func TestHammingMoufang2(t *testing.T) {
+	for i := 0; i < 1000; i++ {
+		cl, err := NewCL(CLParams{Basis: HammingBasis, Theta: RandomTheta})
+		if err != nil {
+			t.Fatalf("Failed to create CL: %s", err)
+		}
+		err = cl.verifyMoufang2()
+		if err != nil {
+			t.Fatalf("Hamming loop not Moufang: %s", err)
+		}
 	}
 }
 
@@ -98,26 +113,7 @@ func TestHammingNotAssoc(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
-	isAssoc := true
-	elems := cl.LoopElems()
-
-	SetCombinationsWithReplacement(uint(len(elems)), 3, func(triple []uint) error {
-		a, b, c := &elems[triple[0]], &elems[triple[1]], &elems[triple[2]]
-		a_bc, ab_c := new(CLElem), new(CLElem)
-
-		cl.Mul(b, c, a_bc)
-		cl.Mul(a, a_bc, a_bc)
-		cl.Mul(a, b, ab_c)
-		cl.Mul(ab_c, c, ab_c)
-
-		if a_bc.sgn != ab_c.sgn {
-			isAssoc = false
-			return fmt.Errorf("Not assoc")
-		}
-		return nil
-	})
-
-	if isAssoc {
+	if cl.IsAssoc() {
 		t.Fatalf("Hamming basis produced an associative group, expected a loop.")
 	}
 }
@@ -127,37 +123,48 @@ func TestBadHammingNotMoufang(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
-	err = cl.VerifyMoufang()
+	err = cl.verifyMoufang()
+	if err == nil {
+		t.Fatalf("Bad Hamming basis passed Moufang test.")
+	}
+}
+
+func TestBadHammingNotMoufang2(t *testing.T) {
+	cl, err := NewCL(CLParams{Basis: badHammingBasis})
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.verifyMoufang2()
 	if err == nil {
 		t.Fatalf("Bad Hamming basis passed Moufang test.")
 	}
 }
 
 // This is commented out because it is VERY SLOW
-//
-// func TestGolayMoufang(t *testing.T) {
-// 	cl, err := NewCL(GolayBasis)
-// 	if err != nil {
-// 		t.Fatalf("Failed to create CL: %s", err)
-// 	}
-// 	err = cl.VerifyMoufang()
-// 	if err != nil {
-// 		t.Fatalf("Golay basis failed VerifyMoufang(): %s", err)
-// 	}
-// }
+
+func TestGolayMoufang2(t *testing.T) {
+	cl, err := NewCL(CLParams{Basis: GolayBasis})
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	err = cl.verifyMoufang2()
+	if err != nil {
+		t.Fatalf("Golay basis failed verifyMoufang(): %s", err)
+	}
+}
 
 func TestBadGolayNotMoufang(t *testing.T) {
 	cl, err := NewCL(CLParams{Basis: badGolayBasis})
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
-	err = cl.VerifyMoufang()
+	err = cl.verifyMoufang()
 	if err == nil {
-		t.Fatalf("Bad Golay basis passed VerifyMoufang(), expected it to fail.")
+		t.Fatalf("Bad Golay basis passed verifyMoufang(), expected it to fail.")
 	}
 }
 
-func TestListHammingElems(t *testing.T) {
+func TestPrintHammingElems(t *testing.T) {
 	cl, err := NewCL(CLParams{Basis: HammingBasis})
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
@@ -165,7 +172,7 @@ func TestListHammingElems(t *testing.T) {
 	cl.PrintLoopElems()
 }
 
-func TestListHammingVectorSpace(t *testing.T) {
+func TestPrintHammingVectorSpace(t *testing.T) {
 	cl, err := NewCL(CLParams{Basis: HammingBasis})
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
@@ -358,7 +365,20 @@ func BenchmarkHammingMoufang(b *testing.B) {
 		b.Fatalf("Failed to create CL: %s", err)
 	}
 	for n := 0; n < b.N; n++ {
-		err = cl.VerifyMoufang()
+		err = cl.verifyMoufang()
+		if err != nil {
+			b.Fatalf("%s", err)
+		}
+	}
+}
+
+func BenchmarkHammingMoufang2(b *testing.B) {
+	cl, err := NewCL(CLParams{Basis: HammingBasis})
+	if err != nil {
+		b.Fatalf("Failed to create CL: %s", err)
+	}
+	for n := 0; n < b.N; n++ {
+		err = cl.verifyMoufang2()
 		if err != nil {
 			b.Fatalf("%s", err)
 		}
