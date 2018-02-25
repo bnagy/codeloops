@@ -1,7 +1,7 @@
 package codeloops
 
 import (
-	"fmt"
+	// "fmt"
 	"testing"
 )
 
@@ -10,6 +10,22 @@ var badHammingBasis = []uint{
 	0x4b, // 0100 | 1011
 	0x3d, // 0011 | 1101 <-- should be 0x2d
 	0x1e, // 0001 | 1110
+}
+
+// The Griess theta on this subspace creates a cocycle.
+var golaySplit4 = []uint{
+	// 0x8009f1,
+	0x4004fa,
+	// 0x20027d,
+	0x10093e,
+	// 0x80c9d,
+	0x40e4e,
+	// 0x20f25,
+	0x10f92,
+	// 0x87c9,
+	// 0x43e6,
+	// 0x2557,
+	// 0x1aab,
 }
 
 var badGolayBasis = []uint{
@@ -82,6 +98,13 @@ func TestVerifyBasis(t *testing.T) {
 	}
 }
 
+func TestGolayInit(t *testing.T) {
+	_, err := NewCL(CLParams{Basis: GolayBasis})
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+}
+
 func TestHammingMoufang(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		cl, err := NewCL(CLParams{Basis: HammingBasis, Theta: RandomTheta})
@@ -140,18 +163,38 @@ func TestBadHammingNotMoufang2(t *testing.T) {
 	}
 }
 
-// This is commented out because it is VERY SLOW
-
-func TestGolayMoufang2(t *testing.T) {
-	cl, err := NewCL(CLParams{Basis: GolayBasis})
+func TestVerifyAssoc(t *testing.T) {
+	cl, err := NewCL(CLParams{Basis: golaySplit4})
 	if err != nil {
 		t.Fatalf("Failed to create CL: %s", err)
 	}
-	err = cl.verifyMoufang2()
-	if err != nil {
-		t.Fatalf("Golay basis failed verifyMoufang(): %s", err)
+	if !cl.verifyAssoc() {
+		t.Fatalf("Golay4 didn't form a group.")
 	}
 }
+
+func TestVerifyAssoc2(t *testing.T) {
+	cl, err := NewCL(CLParams{Basis: golaySplit4})
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	if !cl.verifyAssoc2() {
+		t.Fatalf("Golay4 didn't form a group.")
+	}
+}
+
+// This is commented out because it is VERY SLOW
+
+// func TestGolayMoufang2(t *testing.T) {
+// 	cl, err := NewCL(CLParams{Basis: GolayBasis})
+// 	if err != nil {
+// 		t.Fatalf("Failed to create CL: %s", err)
+// 	}
+// 	err = cl.verifyMoufang2()
+// 	if err != nil {
+// 		t.Fatalf("Golay basis failed verifyMoufang(): %s", err)
+// 	}
+// }
 
 func TestBadGolayNotMoufang(t *testing.T) {
 	cl, err := NewCL(CLParams{Basis: badGolayBasis})
@@ -316,6 +359,18 @@ func TestHammingTheta(t *testing.T) {
 // 	}
 // }
 
+func BenchmarkGolayInit(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		_, _ = NewCL(CLParams{Basis: GolayBasis})
+	}
+}
+
+func BenchmarkHammingInit(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		_, _ = NewCL(CLParams{Basis: HammingBasis})
+	}
+}
+
 func BenchmarkBitWeight(b *testing.B) {
 	// dummy var stops the compiler from eliminating dead code in the loop
 	dummy := uint(0)
@@ -368,6 +423,30 @@ func BenchmarkHammingMoufang(b *testing.B) {
 		err = cl.verifyMoufang()
 		if err != nil {
 			b.Fatalf("%s", err)
+		}
+	}
+}
+
+func BenchmarkVerifyAssoc(b *testing.B) {
+	cl, err := NewCL(CLParams{Basis: golaySplit4})
+	if err != nil {
+		b.Fatalf("Failed to create CL: %s", err)
+	}
+	for n := 0; n < b.N; n++ {
+		if !cl.verifyAssoc() {
+			b.Fatalf("Golay4 didn't split!")
+		}
+	}
+}
+
+func BenchmarkVerifyAssoc2(b *testing.B) {
+	cl, err := NewCL(CLParams{Basis: golaySplit4})
+	if err != nil {
+		b.Fatalf("Failed to create CL: %s", err)
+	}
+	for n := 0; n < b.N; n++ {
+		if !cl.verifyAssoc2() {
+			b.Fatalf("Golay4 didn't split!")
 		}
 	}
 }

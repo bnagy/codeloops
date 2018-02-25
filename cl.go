@@ -27,8 +27,6 @@ type CLParams struct {
 	Seed  int64
 }
 
-const RandomTheta = 0xffffffff
-
 // NewCL returns a new code loop from a basis for a doubly even binary code.
 func NewCL(p CLParams) (cl *CL, e error) {
 	cl = new(CL)
@@ -236,12 +234,12 @@ func (cl *CL) verifyMoufang2() (e error) {
 		for j := 0; j < len(vs); j++ {
 			for k := 0; k < len(vs); k++ {
 				x, y, z = vs[i], vs[j], vs[k]
-				if (cl.thetaByVecFast(x, y)+
-					cl.thetaByVecFast(z, x)+
-					cl.thetaByVecFast(x^y, z^x))%2 !=
-					(cl.thetaByVecFast(y, z)+
-						cl.thetaByVecFast(x, y^z)+
-						cl.thetaByVecFast(x^y^z, x))%2 {
+				if (cl.thetaByVecFast(x, y)^
+					cl.thetaByVecFast(z, x)^
+					cl.thetaByVecFast(x^y, z^x))^
+					cl.thetaByVecFast(y, z)^
+					cl.thetaByVecFast(x, y^z)^
+					cl.thetaByVecFast(x^y^z, x) != 0 {
 					return fmt.Errorf("Code loop failed Moufang identity at %x, %x, %x", x, y, z)
 
 				}
@@ -256,7 +254,11 @@ func (cl *CL) IsMoufang() bool {
 	return e == nil
 }
 
-func (cl *CL) IsAssoc() (isAssoc bool) {
+func (cl *CL) verifyAssoc() (isAssoc bool) {
+
+	// Traditional check - for all a,b,c (ab)c = a(bc)
+	// (this runs on the loop elems)
+
 	isAssoc = true
 	elems := cl.LoopElems()
 
@@ -275,7 +277,33 @@ func (cl *CL) IsAssoc() (isAssoc bool) {
 		}
 		return nil
 	})
-	return isAssoc
+	return
+}
+
+func (cl *CL) verifyAssoc2() bool {
+
+	// Faster check, using the cocycle identity
+	// (this only runs on the vector space elems; half the size)
+
+	vs := cl.VectorSpace()
+	var x, y, z uint
+	for i := 0; i < len(vs); i++ {
+		for j := 0; j < len(vs); j++ {
+			for k := 0; k < len(vs); k++ {
+				x, y, z = vs[i], vs[j], vs[k]
+				if (cl.thetaByVecFast(x, y^z) ^ cl.thetaByVecFast(y, z) ^
+					cl.thetaByVecFast(x^y, z) ^ cl.thetaByVecFast(x, y)) != 0 {
+					return false
+
+				}
+			}
+		}
+	}
+	return true
+}
+
+func (cl *CL) IsAssoc() (isAssoc bool) {
+	return cl.verifyAssoc2()
 }
 
 func (cl *CL) setThetaByVec(v1, v2, val uint) error {
@@ -336,7 +364,6 @@ func (cl *CL) thetaByIdxFast(i1, i2 uint) uint {
 func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
 
 	// cf [Gri86] 226-7
-
 	i := uint(0)
 	random := false
 	if pathGiven == RandomTheta {
