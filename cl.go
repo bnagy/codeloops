@@ -13,6 +13,7 @@ import (
 // such as the basis.
 type CL struct {
 	basis     []uint
+	params    CLParams
 	basisLen  uint // elems in the basis
 	size      uint // elems in the loop
 	theta     *Bitstring.Bitstring
@@ -30,6 +31,7 @@ type CLParams struct {
 // NewCL returns a new code loop from a basis for a doubly even binary code.
 func NewCL(p CLParams) (cl *CL, e error) {
 	cl = new(CL)
+	cl.params = p
 	cl.basis = p.Basis
 	cl.basisLen = uint(len(p.Basis))
 	cl.size = 1 << cl.basisLen
@@ -113,12 +115,36 @@ func (cl *CL) LoopElems() (cles []CLElem) {
 	return
 }
 
+func (cl *CL) ReorderVectorSpace(newVS []uint) error {
+	// is it the same size?
+	if len(newVS) != len(cl.vs) {
+		return fmt.Errorf("Not a reordering - new vector space has %d elems, old one has %d", len(newVS), len(cl.vs))
+	}
+	// does it have all the same vectors?
+	for _, v := range newVS {
+		_, exists := cl.vm[v]
+		if !exists {
+			return fmt.Errorf("Not a reordering - vector 0x%x not in old vector space", v)
+		}
+	}
+	// seems legit, let's proceed.
+	cl.vs = newVS
+	m := make(map[uint]uint)
+	for i, v := range newVS {
+		m[v] = uint(i)
+	}
+	cl.vm = m
+	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
+	e := cl.buildTheta(cl.params.Theta, cl.params.Seed)
+	return e
+}
+
 func (cl *CL) VectorSpace() (vecs []uint) {
 
 	if cl.vs != nil {
 		return cl.vs
 	}
-
+	seen := map[uint]struct{}{}
 	x := uint(0)
 	for i := uint(0); i < cl.size; i++ {
 		x = i
@@ -131,7 +157,10 @@ func (cl *CL) VectorSpace() (vecs []uint) {
 			}
 			x >>= 1
 		}
-		vecs = append(vecs, vec)
+		if _, exists := seen[vec]; !exists {
+			vecs = append(vecs, vec)
+			seen[vec] = struct{}{}
+		}
 	}
 	return
 }
