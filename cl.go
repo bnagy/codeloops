@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/nigelredding/BitString"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -19,6 +21,9 @@ type CL struct {
 	theta     *Bitstring.Bitstring
 	ThetaPath string
 	vs        []uint
+	vsV       []uint
+	vsW       []uint
+	halfMask  uint
 	vm        map[uint]uint
 }
 
@@ -35,8 +40,17 @@ func NewCL(p CLParams) (cl *CL, e error) {
 	cl.basis = p.Basis
 	cl.basisLen = uint(len(p.Basis))
 	cl.size = 1 << cl.basisLen
-	cl.vs = cl.VectorSpace()
-	cl.vm = cl.VectorIdxMap()
+	cl.vs = VectorSpace(p.Basis)
+	m := make(map[uint]uint)
+	for i, v := range cl.vs {
+		m[v] = uint(i)
+	}
+	cl.vm = m
+	// No idea what will happen for odd-length bases
+	cl.vsV = VectorSpace(p.Basis[:cl.basisLen/2])
+	cl.vsW = VectorSpace(p.Basis[cl.basisLen/2:])
+	mask, _ := strconv.ParseUint(strings.Repeat("1", int(cl.basisLen/2)), 2, 0)
+	cl.halfMask = uint(mask)
 	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
 	e = cl.buildTheta(p.Theta, p.Seed)
 	return
@@ -140,42 +154,22 @@ func (cl *CL) ReorderVectorSpace(newVS []uint) error {
 }
 
 func (cl *CL) VectorSpace() (vecs []uint) {
-
-	if cl.vs != nil {
-		return cl.vs
-	}
-	seen := map[uint]struct{}{}
-	x := uint(0)
-	for i := uint(0); i < cl.size; i++ {
-		x = i
-		vec := uint(0)
-		// build the whole vector space by taking linear combinations of all
-		// the basis vectors
-		for bitPos := uint(0); bitPos < cl.basisLen; bitPos++ {
-			if x&1 == 1 {
-				vec ^= cl.basis[bitPos]
-			}
-			x >>= 1
-		}
-		if _, exists := seen[vec]; !exists {
-			vecs = append(vecs, vec)
-			seen[vec] = struct{}{}
-		}
-	}
-	return
+	return cl.vs
 }
 
 func (cl *CL) VectorIdxMap() (m map[uint]uint) {
-
 	// This is handy if you want to quickly find out the index for a vector.
+	return cl.vm
+}
 
-	if cl.vm != nil {
-		return cl.vm
-	}
-
-	m = make(map[uint]uint)
-	for i, v := range cl.VectorSpace() {
-		m[v] = uint(i)
+func (cl *CL) Decompose(vec uint) (v, w uint, e error) {
+	idx := cl.vm[vec]
+	bottom6 := uint(idx) & cl.halfMask
+	top6 := idx >> (cl.basisLen / 2)
+	v = cl.vsV[bottom6]
+	w = cl.vsW[top6]
+	if v^w != vec {
+		return 0, 0, fmt.Errorf("Failed to decompose vec 0x%x", vec)
 	}
 	return
 }

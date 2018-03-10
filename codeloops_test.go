@@ -292,6 +292,19 @@ func TestHammingTheta(t *testing.T) {
 	}
 }
 
+func TestDecompose(t *testing.T) {
+	cl, err := NewCL(CLParams{Basis: GolaySplitBasis})
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	for _, vec := range cl.VectorSpace() {
+		_, _, err := cl.Decompose(vec)
+		if err != nil {
+			t.Fatalf("Error in Decompose(): %s", err)
+		}
+	}
+}
+
 // func TestGolayTheta(t *testing.T) {
 
 // 	basis := GolayBasis

@@ -72,3 +72,26 @@ func SetCombinationsWithoutReplacement(setSz, subsetSz uint, f func([]uint)) {
 	}
 	rc(0, 0)
 }
+
+func VectorSpace(in []uint) (vs []uint) {
+	vs = []uint{}
+	x := uint(0)
+	seen := map[uint]struct{}{}
+	for i := uint(0); i < 1<<uint(len(in)); i++ {
+		x = i
+		vec := uint(0)
+		// build the whole vector space by taking linear combinations of all
+		// the basis vectors
+		for bitPos := uint(0); bitPos < uint(len(in)); bitPos++ {
+			if x&1 == 1 {
+				vec ^= in[bitPos]
+			}
+			x >>= 1
+		}
+		if _, exists := seen[vec]; !exists {
+			vs = append(vs, vec)
+			seen[vec] = struct{}{}
+		}
+	}
+	return vs
+}
