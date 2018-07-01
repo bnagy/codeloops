@@ -1,11 +1,24 @@
-\documentclass[nobib,a4paper,debug]{tufte-handout}
+\documentclass[a4paper,debug]{tufte-handout}
 
 \title{The II-cocycle: Electric Boogaloo}
 \date{\today}
 \author{DMR}
 
 \usepackage{amsmath}
-\usepackage{diagbox}
+
+\hypersetup{
+urlcolor = red,
+colorlinks = true,
+linkcolor = blue,
+citecolor = blue,
+linktocpage = true,
+pdftitle = {The II-cocycle: Electric Boogaloo},
+pdfauthor = {David M. Roberts},
+bookmarksopen = false,
+bookmarksopenlevel = 1,
+unicode = true,
+hypertexnames =false
+}%
 
 \DeclareMathOperator{\Hamming}{Hamming}
 % \DeclareMathOperator{\dim}{dim}
@@ -17,7 +30,7 @@
 \maketitle
 
 \noindent 
-Recall the concept of \emph{code loop} from Griess \cite{Griess}
+Recall the concept of \emph{code loop} from Griess\cite{Griess}
 , and also that of a \emph{factor set}, 
 which we will call a \emph{(twisted) cocycle}. 
 Let $C \subset \F_2^{4n}$ be a doubly-even code.
@@ -42,6 +55,7 @@ We can then present $\alpha$ graphically, with $(2^k + 2^l - 1)^2$ values, rathe
 
 For the Golay code, split into two subspaces of dimension 6, this means we only require the $127^2 = 16129$ values of $\alpha$ in order to determine the rest of the $2^{2\times 12} = 4096^2 = 16777216$ values of $\theta$.
 
+%%%% This doesn't work!!
 % There is nothing stopping us from iterating this procedure, and further splitting into three subspaces, say
 % $C = U \oplus V \oplus W$, of dimensions $k,l$ and $m$ respectively, so that we only require $(2^k+2^l+2^m-2)^2$ values, rather than $2^{2(k+l+m)}$ values.
 % In this instance we have a function

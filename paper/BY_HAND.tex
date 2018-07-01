@@ -1,4 +1,4 @@
-\documentclass[nobib,a4paper,debug]{tufte-handout}
+\documentclass[a4paper,debug]{tufte-handout}
 
 \title{The cocycle: a toy version}
 \date{\today}
@@ -6,6 +6,20 @@
 
 \usepackage{amsmath}
 \usepackage{diagbox}
+
+\hypersetup{
+urlcolor = red,
+colorlinks = true,
+linkcolor = blue,
+citecolor = blue,
+linktocpage = true,
+pdftitle = {The cocycle: a toy version},
+pdfauthor = {David M. Roberts},
+bookmarksopen = false,
+bookmarksopenlevel = 1,
+unicode = true,
+hypertexnames =false
+}%
 
 \DeclareMathOperator{\Hamming}{Hamming}
 \DeclareMathOperator{\Span}{span}
@@ -25,7 +39,7 @@ $00011110$
 Define $v_0 = 00011110$, $v_1=00101101$ and $V = \Span\{v_0,v_1\}\subset \F_2^8$.
 Let's calculate $\theta\colon V\times V \to \F_2$
 \marginnote{I do wonder how this relates to the quaternion group extension cocycle}
-\`a la \cite[Theorem 10]{Griess}. All equality is modulo 2.
+\`a la Theorem 10 of Griess\cite{Griess}. All equality is modulo 2.
 
 \begin{itemize}
 
