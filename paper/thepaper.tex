@@ -6,8 +6,24 @@
 \date{\today}
 \author{Ben Nagy and David Michael Roberts}
 
+\setlength{\parindent}{0pt}
+
 \usepackage{amsmath,amsthm}
-\usepackage{url}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\theoremstyle{remark}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+\usepackage{url,graphicx}
 
 \hypersetup{
 urlcolor = red,
@@ -27,21 +43,10 @@ hypertexnames =false
 \DeclareMathOperator{\dom}{dom}
 \DeclareMathOperator{\Span}{span}
 \newcommand{\F}{\mathbb{F}}
+\def\cP{\mathcal{P}}
+\def\FF{\mathbb{F}}
 
-\theoremstyle{plain}
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{corollary}[theorem]{Corollary}
 
-\theoremstyle{definition}
-\newtheorem{definition}[theorem]{Definition}
-
-\theoremstyle{remark}
-\newtheorem{example}[theorem]{Example}
-\newtheorem{remark}[theorem]{Remark}
-
-\setlength{\parindent}{0pt}
 \begin{document}
 
 \maketitle
@@ -54,21 +59,42 @@ hypertexnames =false
 
 
 \section{Intro}
-Recall the concept of \emph{code loop} from Griess\cite{Griess}, and also that of a \emph{factor set}, which we will call a \emph{twisted cocycle}. 
-Let $C \subset \F_2^{4n}$ be a doubly-even code.\sidenote{Here is a sidenote}
-The twisted cocycle identity for $\theta\colon C\times C \to \F_2$ is
+
+A \emph{loop} is an algebraic structure generalising that of a group, where the axiom of associativity is lost, but the property that left and right multiplication by any fixed element is a bijection is added as a new axiom.
+Even nicer than general loops are \emph{Moufang} loops, which satisfy a weak variant of associativity, namely
 \[
-	\theta(x,y) + \theta(x,y+z) + \theta(x+y,z) + \theta(y,z) = |x\wedge y \wedge z|
+	z(x(zy)) = ((zx)z)y.
 \]
-where $\wedge$ is co\"ordinate-wise multiplication, and $|\cdot|$ is the bit weight of a vector, namely the number of non-zero entries.\marginnote{Here is a marginnote}
+One interesting class of finite Moufang loops are constructed from \emph{doubly-even codes}---certain nice subspaces of vector fields over $\FF_2$)---and so are called \emph{code loops}. 
+These were introduced by Griess\cite{Griess} as a general framework to include the Parker loop $\cP$, used by Conway as one ingredient in constructing the Monster group.
 
-\section{Griess' algorithm}
+Code loops are central extensions, in the category of codes, of the underlying additive group of a doubly-even code $C$:
+\[
+	1\to \FF_2 \to \widetilde{C} \to C \to 1
+\]
+Much as central extensions of groups can be described by, and constructed from, 2-cocycles, a central extension as above can be described by a \emph{twisted cocycle} $\theta\colon C\times C \to \FF_2$. 
+Instead of the cocycle identity, $\theta$ must satisfy
+\[
+	\theta(x,y) + \theta(x,y+z) + \theta(x+y,z) + \theta(y,z) = |x\wedge y \wedge z|,
+\]
+where $\wedge$ is co\"ordinate-wise multiplication,\marginnote{that is, bit-wise AND} and $|\cdot|$ is the bit-weight of a vector, namely the number of non-zero entries.
 
-Here's a sample of the first pass of the algorithm\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms#Typesetting_using_the_algorithmicx_package}}
+Griess outlines a method to compute $\theta$, given a total flag in the code $C$, as an existence proof for code loops.
+However, it is far from obvious what properties the resulting twisted cocycle (and so the code loop) has, apart from being unique up to a coboundary.
+This paper gives an implementation of Griess' procedure and a means of reconstructing any value of a precalculated twisted cocycle from a  lookup table much smaller that the full data of the twisted cocycle.
+This will ideally lead to feasable computation with the Parker loop.
+
+
+\section{The algorithm}
+
+Griess' method starts by choosing a total flag and then choosing a specified new vector in each higher-dimensional subspace, but we have rather chosen to input a basis $\{v_0,\ldots,v_{n-1}\}$, and then generate the flag $V_0 \subset V_1 \subset \cdots \subset V_{n-1} = C$ as $V_i = \Span\{v_0,\ldots,v_i\}$.
+Ater an initialisation step (D0), the algorithm loops through steps D1-D4 for each subspace $V_1$,\ldots,$V_{n-1}$.
+
+Here's a sample of the first pass of the algorithm, though we need to check this against the implementation, and it should generalise to $v \in \Span(\text{already considered vectors})$.\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms}}
 
 \begin{itemize}
 
-	\item[D0:] $\theta(v_0,v_0) = |v_0|/4,\quad \theta(0,0) = \theta(0,v_0) = \theta(v_0,0) = 0$.
+	\item[D0:] $\theta(0,0) = \theta(0,v_0) = \theta(v_0,0) = 0, \quad \theta(v_0,v_0) = |v_0|/4$.
 
 	\item[D1:] For all $x \in \Span\{v_0\}$, 
 	\begin{itemize}
@@ -100,9 +126,13 @@ All kinds of crazy bit-level tricks...
 Benchmarking etc.
 
 \section{Reducing the size of the domain} 
-We can split $C$ as $V\oplus W$ and denote the restriction of $\theta$ to $(V\cup W)\times (V \cup W)$ by $\alpha$, which is a function
+We can split $C$ as $V\oplus W$ and denote the restriction of $\theta$ to $(V\cup W)\times (V \cup W)$ by $\alpha$, that is, a function
 \[
-	V\oplus V \cup W\oplus W \cup V\oplus W \cup W\oplus V \to \F_2.
+	\begin{array}{ccc}
+		V\times V& \cup&V\times W\\
+		\cup&&\cup\\
+		W\times V&\cup &W\times W
+	\end{array} \longrightarrow \F_2.
 \]
 
 \begin{proposition}\label{eq:reconstructing theta}
@@ -121,7 +151,11 @@ So if $\theta$ has been already calculated using the algorithm in the section `G
 
 \section{Pretty pictures}
 
-Go here
+Here is $\alpha$ (badly displayed because of .png$\to$.pdf, but we can make a svg one in Go)
+
+\begin{center}
+	\includegraphics[width=\textwidth]{alpha555_no_label.png}
+\end{center}
 
 \bibliographystyle{alpha}
 \bibliography{bib}
