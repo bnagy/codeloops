@@ -1,0 +1,86 @@
+\documentclass[a4paper,debug]{tufte-handout}
+
+\title{The II-cocycle: Electric Boogaloo}
+\date{\today}
+\author{DMR}
+
+\usepackage{amsmath}
+
+\hypersetup{
+urlcolor = red,
+colorlinks = true,
+linkcolor = blue,
+citecolor = blue,
+linktocpage = true,
+pdftitle = {The II-cocycle: Electric Boogaloo},
+pdfauthor = {David M. Roberts},
+bookmarksopen = false,
+bookmarksopenlevel = 1,
+unicode = true,
+hypertexnames =false
+}%
+
+\DeclareMathOperator{\Hamming}{Hamming}
+% \DeclareMathOperator{\dim}{dim}
+\newcommand{\F}{\mathbb{F}}
+
+
+\setlength{\parindent}{0pt}
+\begin{document}
+\maketitle
+
+\noindent 
+Recall the concept of \emph{code loop} from Griess\cite{Griess}
+, and also that of a \emph{factor set}, 
+which we will call a \emph{(twisted) cocycle}. 
+Let $C \subset \F_2^{4n}$ be a doubly-even code.
+The twisted cocycle identity for $\theta\colon C\times C \to \F_2$ is
+\[
+	\theta(x,y) + \theta(x,y+z) + \theta(x+y,z) + \theta(y,z) = |x\wedge y \wedge z|
+\]
+where $\wedge$ is co\"ordinate-wise multiplication, and $|\cdot|$ is the bit weight of a vector.
+
+% \noindent
+We can split $C$ as $V\oplus W$ and denote the restriction of $\theta$ to $(V\cup W)\times (V \cup W)$ by $\alpha$, which is a function
+\[
+	V\oplus V \cup W\oplus W \cup V\oplus W \cup W\oplus V \to \F_2.
+\]
+We can write $\theta$ entirely in terms of $\alpha$ as follows:
+\begin{align*}
+	\theta(v_1+w_1,v_2+w_2)	& = \alpha(v_1,v_2)  + \alpha(w_1,w_2) + \alpha(v_1,w_1) + \alpha(w_2,v_2) + \alpha(v_1+v_2,w_1+w_2)\\
+							& + \frac12|v_2\wedge(w_1+w_2)| + |v_1\wedge v_2 \wedge (w_1+w_2)| + |w_1\wedge w_2 \wedge v_2| + |v_1\wedge w_1 \wedge (v_2 + w_2)|
+\end{align*}
+
+We can then present $\alpha$ graphically, with $(2^k + 2^l - 1)^2$ values, rather than presenting $\theta$, with $2^{2(k+l)}$ values, where $k=\dim V$ and $l=\dim W$. Together with the above equation this determines $\theta$ uniquely. 
+
+For the Golay code, split into two subspaces of dimension 6, this means we only require the $127^2 = 16129$ values of $\alpha$ in order to determine the rest of the $2^{2\times 12} = 4096^2 = 16777216$ values of $\theta$.
+
+%%%% This doesn't work!!
+% There is nothing stopping us from iterating this procedure, and further splitting into three subspaces, say
+% $C = U \oplus V \oplus W$, of dimensions $k,l$ and $m$ respectively, so that we only require $(2^k+2^l+2^m-2)^2$ values, rather than $2^{2(k+l+m)}$ values.
+% In this instance we have a function
+% \[
+% 	\beta\colon (U\cup V \cup W) \times (U\cup V \cup W) \to \F_2
+% \]
+% and $\theta$ can be written as
+% \begin{align*}
+% 	\theta(u_1+v_1+w_1,u_2+v_2+w_2)	& = \alpha(u_1+v_1,u_2+v_2)  + \alpha(w_1,w_2) + \alpha(u_1+v_1,w_1) \\
+% 									& + \alpha(w_2,u_2+v_2) + \alpha(u_1+u_2+v_1+v_2,w_1+w_2)\\
+% 							& + \frac12|(u_2+v_2)\wedge(w_1+w_2)| + |(u_1+v_1)\wedge (u_2+v_2) \wedge (w_1+w_2)|\\
+% 							& + |w_1\wedge w_2 \wedge (u_2+v_2)| + |(u_1+v_1)\wedge w_1 \wedge (u_2+v_2 + w_2)|
+% \end{align*}
+% where we have reused the formula involving $\alpha$ for the restriction $\theta\big|_{((U\oplus V) \cup W)^2}$ to the union of two subspaces. This can then be further broken down so as to use only $\beta$.
+
+% \medskip
+% {\footnotesize For the Golay code, we can split it into three subspaces each of dimension $4$, so that the $(3\times 2^4-2)^2 = 46^2 = 2116$ values of $\beta$ are enough to determine the twisted cocycle that determines the Parker loop, rather than all $2^{2\times 12} = 4096^2 = 16777216$ values. Note that $\alpha$ has $127^2 = 16129$ values in this case.}
+
+% \newpage
+% We will work out each term using $\alpha $in the previous expression in terms of $\beta$.
+% \begin{align*}
+% 	\alpha(u_1+v_1,u_2+v_2) & = \beta(u_1,u_2)  + \beta(v_1,v_2) + \beta(u_1,v_1) + \beta(v_2,u_2) + \beta(u_1+u_2,v_1+v_2)\\
+% 							& + \frac12|u_2\wedge(v_1+v_2)| + |u_1\wedge u_2 \wedge (v_1+v_2)| + |v_1\wedge v_2 \wedge u_2| + |u_1\wedge v_1 \wedge (u_2 + v_2)|
+% \end{align*}
+
+\bibliographystyle{alpha}
+\bibliography{bib}
+\end{document}
