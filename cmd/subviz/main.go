@@ -96,7 +96,7 @@ func main() {
 		for _, idx := range s {
 			thisBasis = append(thisBasis, codeloops.GolayBasis[idx])
 		}
-		cl, _ := codeloops.NewCL(codeloops.CLParams{Basis: thisBasis, Theta: 0})
+		cl, _ := codeloops.NewCL(codeloops.CLParams{Basis: thisBasis})
 
 		if labelH > 0 {
 			label := "Basis:"
@@ -106,7 +106,7 @@ func main() {
 			// Drawing two strings in a whitespace height of labelHf+borderWf,
 			// so one is vertically centred at h/4, one at 3h/4
 			dc.DrawStringAnchored(label, tlXf+borderWf, tlYf+(labelHf+borderWf)/4, 0, 0.5)
-			dc.DrawStringAnchored(fmt.Sprintf("Theta: %s", cl.ThetaPath), tlXf+borderWf, tlYf+(labelHf+borderWf)*3/4, 0, 0.5)
+			dc.DrawStringAnchored(fmt.Sprintf("Seed: %s", cl.Seed), tlXf+borderWf, tlYf+(labelHf+borderWf)*3/4, 0, 0.5)
 		}
 
 		res := new(codeloops.CLElem)
