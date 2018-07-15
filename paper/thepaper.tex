@@ -8,6 +8,8 @@
 
 \setlength{\parindent}{0pt}
 
+\usepackage[lined,boxruled,commentsnumbered]{algorithm2e}
+
 \usepackage{amsmath,amsthm}
 
 \theoremstyle{plain}
@@ -91,6 +93,55 @@ Griess' method starts by choosing a total flag and then choosing a specified new
 Ater an initialisation step (D0), the algorithm loops through steps D1-D4 for each subspace $V_1$,\ldots,$V_{n-1}$.
 
 Here's a sample of the first pass of the algorithm, though we need to check this against the implementation, and it should generalise to $v \in \Span(\text{already considered vectors})$.\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms}}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwData{basis $\{b_0,b_1,\ldots,b_{n-1}\}$ for the code $C$}
+\KwResult{twisted cocycle $\theta\colon C\times C\to \FF_2$, encoded as a square array of elements from $\FF_2$, with rows and columns indexed by $C$ }
+Initialise: set all values to $0$\;
+\tcp{step D0: Vk here is span(b0)}
+$\theta(b_0,b_0) \leftarrow |b_0|/4 \mod 2$\;
+\ForAll{$1\leq k\leq n-1$}{
+	Define $V_k :=\Span\{b_0,\ldots,b_{k-1}\}$\;
+	\tcp{step D1: define theta on \{bk\} x Vk and deduce on Vk x \{bk\}}
+	\ForAll{$v\in V_k$}{
+		\eIf{$v\neq0$}{
+			$\theta(b_k,v) \leftarrow \text{random}$\;
+			$\theta(v,b_k) \leftarrow |v\wedge b_k|/2+\theta(b_k,v) \mod 2$\;
+		}
+		{
+			\tcp{$\theta(b_k,v)$ is already implicity set to $0$}
+			$\theta(v,b_k)\leftarrow |v\wedge b_k| \mod 2$ (but isn't this also always $0$?)\;
+		}
+	}
+	\tcp{step D2: deduce theta on \{bk\} x Wk and Wk x \{bk\}}
+	\ForAll{$v\in V_k$}{
+		$\theta(b_k,b_k+v) \leftarrow |b_k|/4 + \theta(b_k,v)\mod 2$\;
+		$\theta(b_k+v,b_k) \leftarrow |b_k\wedge (b_k+v)|/2 + |b_k|/4 + \theta(b_k,v)\mod 2$\;
+	}
+	\tcp{step D3: deduce theta on Wk x Wk}
+	\ForAll{$v_1\in V_k$}{
+		\ForAll{$v_2\in V_k$}{
+			$w\leftarrow b_k + v_2$\;
+			$a\leftarrow \theta(v_1,b_k)$\;
+			$b\leftarrow \theta(v_1,b_k+w)$ (but isn't $b_k+w=v_2$?)\;
+			$c\leftarrow \theta(w,b_k)$\;
+			$r \leftarrow |v_1\wedge w|/2 + a + b + c \mod 2$\;
+			$\theta(w,b_k+v_1) \leftarrow r$
+		}
+	}
+	\tcp{step D4: deduce theta on Wk x Vk and Vk x Wk}
+	\ForAll{$v_1\in V_k$}{
+		\ForAll{$v_2\in V_k$}{
+			$w\leftarrow b_k + v_2$\;
+			$a\leftarrow \theta(w,v_1+w)$\;
+			$\theta(w,v_1) \leftarrow |w|/4 + a \mod 2$\;
+			$\theta(v_1,w) \leftarrow |v\wedge w|/2 + |w|/4 + a \mod 2$\;
+		}
+	}
+}
+\caption{Extracted from Griess' proof of existence of twisted cocycles for code loops}
+\end{algorithm}
 
 \begin{itemize}
 
