@@ -3,6 +3,7 @@ package codeloops
 import (
 	"fmt"
 	"github.com/nigelredding/BitString"
+	// "log"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -14,23 +15,23 @@ import (
 // CL is a structure which contains information about the ambient loop space
 // such as the basis.
 type CL struct {
-	basis     []uint
-	params    CLParams
-	basisLen  uint // elems in the basis
-	size      uint // elems in the loop
-	theta     *Bitstring.Bitstring
-	ThetaPath string
-	vs        []uint
-	vsV       []uint
-	vsW       []uint
-	halfMask  uint
-	vm        map[uint]uint
+	basis    []uint
+	params   CLParams
+	basisLen uint // elems in the basis
+	size     uint // elems in the loop
+	theta    *Bitstring.Bitstring
+	Seed     string
+	vs       []uint
+	vsV      []uint
+	vsW      []uint
+	halfMask uint
+	vm       map[uint]uint
 }
 
 type CLParams struct {
-	Basis []uint
-	Theta uint
-	Seed  int64
+	Basis  []uint
+	Random bool
+	Seed   int64
 }
 
 // NewCL returns a new code loop from a basis for a doubly even binary code.
@@ -52,7 +53,7 @@ func NewCL(p CLParams) (cl *CL, e error) {
 	mask, _ := strconv.ParseUint(strings.Repeat("1", int(cl.basisLen/2)), 2, 0)
 	cl.halfMask = uint(mask)
 	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
-	e = cl.buildTheta(p.Theta, p.Seed)
+	e = cl.buildTheta(p.Random, p.Seed)
 	return
 }
 
@@ -129,29 +130,31 @@ func (cl *CL) LoopElems() (cles []CLElem) {
 	return
 }
 
-func (cl *CL) ReorderVectorSpace(newVS []uint) error {
-	// is it the same size?
-	if len(newVS) != len(cl.vs) {
-		return fmt.Errorf("Not a reordering - new vector space has %d elems, old one has %d", len(newVS), len(cl.vs))
-	}
-	// does it have all the same vectors?
-	for _, v := range newVS {
-		_, exists := cl.vm[v]
-		if !exists {
-			return fmt.Errorf("Not a reordering - vector 0x%x not in old vector space", v)
-		}
-	}
-	// seems legit, let's proceed.
-	cl.vs = newVS
-	m := make(map[uint]uint)
-	for i, v := range newVS {
-		m[v] = uint(i)
-	}
-	cl.vm = m
-	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
-	e := cl.buildTheta(cl.params.Theta, cl.params.Seed)
-	return e
-}
+// This is probably broken.
+//
+// func (cl *CL) ReorderVectorSpace(newVS []uint) error {
+// 	// is it the same size?
+// 	if len(newVS) != len(cl.vs) {
+// 		return fmt.Errorf("Not a reordering - new vector space has %d elems, old one has %d", len(newVS), len(cl.vs))
+// 	}
+// 	// does it have all the same vectors?
+// 	for _, v := range newVS {
+// 		_, exists := cl.vm[v]
+// 		if !exists {
+// 			return fmt.Errorf("Not a reordering - vector 0x%x not in old vector space", v)
+// 		}
+// 	}
+// 	// seems legit, let's proceed.
+// 	cl.vs = newVS
+// 	m := make(map[uint]uint)
+// 	for i, v := range newVS {
+// 		m[v] = uint(i)
+// 	}
+// 	cl.vm = m
+// 	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
+// 	e := cl.buildTheta(cl.params.Random, cl.params.Seed)
+// 	return e
+// }
 
 func (cl *CL) VectorSpace() (vecs []uint) {
 	return cl.vs
@@ -163,6 +166,11 @@ func (cl *CL) VectorIdxMap() (m map[uint]uint) {
 }
 
 func (cl *CL) Decompose(vec uint) (v, w uint, e error) {
+	// We build vectors by taking an index 0 <= i < 4096, and then XORing in
+	// each basis vector which corresponds to a 1 bit in that index. That
+	// means that if we split the index of any vector into the top and bottom
+	// 6 bits, we can treat each half as an index into a vector space of size
+	// 64 (2^6).
 	idx := cl.vm[vec]
 	bottom6 := uint(idx) & cl.halfMask
 	top6 := idx >> (cl.basisLen / 2)
@@ -341,6 +349,8 @@ func (cl *CL) setThetaByVec(v1, v2, val uint) error {
 	if i1 >= 1<<cl.basisLen || i2 >= 1<<cl.basisLen {
 		return fmt.Errorf("Args to setThetaByVec (%x, %x) overflow bitstring of len %d", v1, v2, cl.size*cl.size)
 	}
+	// log.Printf("t(%d,%d) = %d", i1, i2, val)
+	// time.Sleep(50 * time.Millisecond)
 	if val > 0 {
 		cl.theta.SetBit(int(i1<<cl.basisLen | i2))
 	}
@@ -384,7 +394,124 @@ func (cl *CL) thetaByIdxFast(i1, i2 uint) uint {
 	return uint(cl.theta.GetBit(int(i1<<cl.basisLen | i2)))
 }
 
-func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
+func (cl *CL) buildTheta(random bool, seed int64) error {
+
+	var x uint
+
+	if random && seed == 0 {
+		rand.Seed(time.Now().UnixNano())
+	} else {
+		rand.Seed(seed)
+	}
+
+	// cf [Gri86] 226-7
+	// We build a chain of subspaces V0<V1<V2...<Vk, and define Wk to be
+	// Vk+1 - Vk.
+	// Intuitively, Wk contains the vectors that will be added when we add the
+	// next basis vector bk
+
+	b0 := cl.basis[0]
+	// basic assumption about V0, other than normalization, which is 'set' for
+	// free, since the bitstring defaults to 00..0
+	e := cl.setThetaByVec(b0, b0, (BitWeight(b0)/4)%2)
+	if e != nil {
+		return e
+	}
+
+	Vk := []uint{0, b0} // span(b0)
+
+	for _, bk := range cl.basis[1:] {
+
+		// create Wk by combining bk with every vector in Vk
+		Wk := []uint{}
+		for _, v := range Vk {
+			Wk = append(Wk, bk^v)
+		}
+
+		// D1 - define {bk} x Vk and deduce Vk x {bk}
+		// log.Printf("Starting D1")
+		for _, v := range Vk {
+			// theta(bk,0) must be 0 (normalized cocycle), but anything else is up for grabs.
+			if v != 0 {
+				if random {
+					x = uint(rand.Uint32() & 1) // a random bit
+				} else {
+					x = 0
+				}
+				cl.setThetaByVec(bk, v, x)
+				cl.setThetaByVec(v, bk, ((BitWeight(v&bk)/2)+x)%2)
+			} else {
+				// theta(bk,v) is implicitly 'set' to 0 in the bitstring
+				cl.setThetaByVec(v, bk, (BitWeight(v&bk)/2)%2) // x is forced to be 0
+			}
+		}
+
+		// D2 - deduce {bk} x Wk and Wk x {bk}
+		// log.Printf("Starting D2")
+		for _, v := range Vk {
+			a, e := cl.ThetaByVec(bk, v)
+			if e != nil {
+				return e
+			}
+			// It looks weird that we're looping over Vk here, but remember
+			// that bk^v is an element of _Wk_ not Vk
+			cl.setThetaByVec(bk, bk^v, (BitWeight(bk)/4+uint(a))%2)
+			cl.setThetaByVec(bk^v, bk, (BitWeight(bk&(bk^v))/2+(BitWeight(bk)/4+uint(a))%2)%2)
+		}
+
+		// D3 - deduce Wk x Wk
+		// log.Printf("Starting D3")
+		for _, v := range Vk {
+			for _, v2 := range Vk {
+				w := bk ^ v2
+				a, e := cl.ThetaByVec(v, bk)
+				if e != nil {
+					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk)
+					return e
+				}
+				b, e := cl.ThetaByVec(v, bk^w)
+				if e != nil {
+					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk^w)
+					return e
+				}
+				c, e := cl.ThetaByVec(w, bk)
+				if e != nil {
+					e := fmt.Errorf("Error getting %.2x, %.2x: %s", w, bk)
+					return e
+				}
+				res := (BitWeight(v&w)/2 + uint(a) + uint(b) + uint(c)) % 2
+				cl.setThetaByVec(w, bk^v, res)
+			}
+		}
+
+		// D4 - deduce Wk x Vk and Vk x Wk
+		// log.Printf("Starting D4")
+		for _, v := range Vk {
+			for _, v2 := range Vk {
+				w := bk ^ v2
+				a, e := cl.ThetaByVec(w, v^w)
+				if e != nil {
+					return e
+				}
+				cl.setThetaByVec(w, v, (BitWeight(w)/4+uint(a))%2)
+				cl.setThetaByVec(v, w, (BitWeight(v&w)/2+(BitWeight(w)/4+uint(a))%2)%2)
+			}
+		}
+
+		Vk = append(Vk, Wk...)
+
+	}
+	cl.Seed = fmt.Sprintf("0x%x", seed)
+	return nil
+}
+
+// This is legacy code which is here in case I ever need to regenerate some
+// old images. The issue is that the path supplied is too small, so what's
+// actually happening is that only the first 2^64 choices are being changed by
+// a given path and the rest ends up being deterministic.
+func (cl *CL) buildThetaWithPath(pathGiven uint, seed int64) error {
+
+	var x uint
 
 	// cf [Gri86] 226-7
 	i := uint(0)
@@ -425,8 +552,8 @@ func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
 		}
 
 		// D1 - define {bk} x Vk and deduce Vk x {bk}
+		// log.Printf("Starting D1")
 		for _, v := range Vk {
-			var x uint
 			// theta(bk,0) must be 0 (normalized cocycle), but anything else is up for grabs.
 			if v != 0 {
 				if random {
@@ -446,6 +573,7 @@ func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
 		}
 
 		// D2 - deduce {bk} x Wk and Wk x {bk}
+		// log.Printf("Starting D2")
 		for _, v := range Vk {
 			a, e := cl.ThetaByVec(bk, v)
 			if e != nil {
@@ -458,6 +586,7 @@ func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
 		}
 
 		// D3 - deduce Wk x Wk
+		// log.Printf("Starting D3")
 		for _, v := range Vk {
 			for _, v2 := range Vk {
 				w := bk ^ v2
@@ -482,6 +611,7 @@ func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
 		}
 
 		// D4 - deduce Wk x Vk and Vk x Wk
+		// log.Printf("Starting D4")
 		for _, v := range Vk {
 			for _, v2 := range Vk {
 				w := bk ^ v2
@@ -497,6 +627,6 @@ func (cl *CL) buildTheta(pathGiven uint, seed int64) error {
 		Vk = append(Vk, Wk...)
 
 	}
-	cl.ThetaPath = fmt.Sprintf("0x%x", pathTaken)
+	cl.Seed = fmt.Sprintf("0x%x", pathTaken)
 	return nil
 }

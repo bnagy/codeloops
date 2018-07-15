@@ -107,7 +107,7 @@ func TestGolayInit(t *testing.T) {
 
 func TestHammingMoufang(t *testing.T) {
 	for i := 0; i < 1000; i++ {
-		cl, err := NewCL(CLParams{Basis: HammingBasis, Theta: RandomTheta})
+		cl, err := NewCL(CLParams{Basis: HammingBasis, Random: true})
 		if err != nil {
 			t.Fatalf("Failed to create CL: %s", err)
 		}
@@ -120,7 +120,7 @@ func TestHammingMoufang(t *testing.T) {
 
 func TestHammingMoufang2(t *testing.T) {
 	for i := 0; i < 1000; i++ {
-		cl, err := NewCL(CLParams{Basis: HammingBasis, Theta: RandomTheta})
+		cl, err := NewCL(CLParams{Basis: HammingBasis, Random: true})
 		if err != nil {
 			t.Fatalf("Failed to create CL: %s", err)
 		}
@@ -227,7 +227,7 @@ func TestHammingTheta(t *testing.T) {
 
 	for i := 0; i < 1000; i++ {
 		basis := HammingBasis
-		cl, err := NewCL(CLParams{Basis: basis, Theta: RandomTheta})
+		cl, err := NewCL(CLParams{Basis: basis, Random: true})
 		if err != nil {
 			t.Fatalf("Failed to create CL: %s", err)
 		}

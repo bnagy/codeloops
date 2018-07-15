@@ -66,7 +66,7 @@ func main() {
 			for _, idx := range s {
 				b = append(b, fullVectorSpace[idx])
 			}
-			cl, err := codeloops.NewCL(codeloops.CLParams{Basis: b, Theta: 0})
+			cl, err := codeloops.NewCL(codeloops.CLParams{Basis: b})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -98,7 +98,7 @@ func main() {
 			for _, idx := range s {
 				b = append(b, fullVectorSpace[idx])
 			}
-			cl, err := codeloops.NewCL(codeloops.CLParams{Basis: b, Theta: 0})
+			cl, err := codeloops.NewCL(codeloops.CLParams{Basis: b})
 			if err != nil {
 				log.Fatal(err)
 			}
