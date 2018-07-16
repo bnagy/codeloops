@@ -6,29 +6,6 @@ import (
 	"log"
 )
 
-func VectorSpace(in []uint) (vs []uint) {
-	vs = []uint{}
-	x := uint(0)
-	seen := map[uint]struct{}{}
-	for i := uint(0); i < 1<<uint(len(in)); i++ {
-		x = i
-		vec := uint(0)
-		// build the whole vector space by taking linear combinations of all
-		// the basis vectors
-		for bitPos := uint(0); bitPos < uint(len(in)); bitPos++ {
-			if x&1 == 1 {
-				vec ^= in[bitPos]
-			}
-			x >>= 1
-		}
-		if _, exists := seen[vec]; !exists {
-			vs = append(vs, vec)
-			seen[vec] = struct{}{}
-		}
-	}
-	return vs
-}
-
 func AddElems(to []int, from []uint, n int, verify func([]int) bool) (bool, []int) {
 	for i := to[len(to)-1] + 1; i < len(from); i++ {
 		candidate := append(to, i)
@@ -37,8 +14,7 @@ func AddElems(to []int, from []uint, n int, verify func([]int) bool) (bool, []in
 			continue
 		}
 
-		// OK, this set meets the criteria.
-
+		// OK, we added this candidate and the set meets the criteria.
 		if n == 1 {
 			// this was the last one. Stop recursion.
 			return true, candidate
@@ -47,7 +23,9 @@ func AddElems(to []int, from []uint, n int, verify func([]int) bool) (bool, []in
 		if ok, set := AddElems(candidate, from, n-1, verify); ok {
 			return true, set
 		}
-		// meets criteria, but couldn't add enough extras, keep trying
+
+		// the candidate met the criteria, but we couldn't add enough extras.
+		// Keep trying...
 	}
 	// did the whole loop and didn't find any candidates
 	return false, nil
@@ -56,7 +34,7 @@ func AddElems(to []int, from []uint, n int, verify func([]int) bool) (bool, []in
 func main() {
 
 	fullBasis := codeloops.GolayBasis
-	fullVectorSpace := VectorSpace(fullBasis)
+	fullVectorSpace := codeloops.VectorSpace(fullBasis)
 	b6, b5 := []uint{}, []uint{}
 	vs6, vs5 := []uint{}, []uint{}
 	for i := 0; i < len(fullVectorSpace); i++ {
@@ -86,7 +64,7 @@ func main() {
 				b6 = append(b6, fullVectorSpace[idx])
 				fmt.Printf("\t0x%x\n", fullVectorSpace[idx])
 			}
-			vs6 = append(vs6, VectorSpace(b6)...)
+			vs6 = append(vs6, codeloops.VectorSpace(b6)...)
 			break
 		}
 	}
@@ -125,13 +103,13 @@ func main() {
 				b5 = append(b5, fullVectorSpace[idx])
 				fmt.Printf("\t0x%x\n", fullVectorSpace[idx])
 			}
-			vs5 = append(vs5, VectorSpace(b5)...)
+			vs5 = append(vs5, codeloops.VectorSpace(b5)...)
 			break
 		}
 	}
 
 	b11 := append(b6, b5...)
-	vs11 := VectorSpace(b11)
+	vs11 := codeloops.VectorSpace(b11)
 	if len(vs11) != 1<<11 {
 		log.Fatalf("Not enough vectors in VS11: %d", len(vs11))
 	}
@@ -152,7 +130,7 @@ func main() {
 		}
 	}
 	b12 := append(b11, lastVec)
-	vs12 := VectorSpace(b12)
+	vs12 := codeloops.VectorSpace(b12)
 	if len(vs12) != 1<<12 {
 		log.Fatalf("Not enough vectors in VS11: %d", len(vs12))
 	}

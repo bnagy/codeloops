@@ -28,7 +28,7 @@ func main() {
 	subspaces := 0
 	codeloops.SetCombinationsWithoutReplacement(uint(len(basis)), uint(choose), func(s []uint) {
 		// such a lazy way to do this, but has the advantage that the number
-		// here will definitely match to loop below
+		// here will definitely match the loop below
 		subspaces++
 	})
 	xreps := int(math.Ceil(math.Sqrt(float64(subspaces))))
