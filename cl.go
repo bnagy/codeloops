@@ -111,10 +111,13 @@ func (cl *CL) Mul(x, y, res *CLElem) (*CLElem, error) {
 	return res, nil
 }
 
+// Size returns the number of elements in the loop.
 func (cl *CL) Size() int {
 	return int(cl.size)
 }
 
+// LoopElems returns the loop elements as a slice, with all positive elements
+// listed first.
 func (cl *CL) LoopElems() (cles []CLElem) {
 	// We put all the positive elements first. That way, if we only want the
 	// loop vectors (and not the signs) we can just pull out the first half of
@@ -130,41 +133,20 @@ func (cl *CL) LoopElems() (cles []CLElem) {
 	return
 }
 
-// This is probably broken.
-//
-// func (cl *CL) ReorderVectorSpace(newVS []uint) error {
-// 	// is it the same size?
-// 	if len(newVS) != len(cl.vs) {
-// 		return fmt.Errorf("Not a reordering - new vector space has %d elems, old one has %d", len(newVS), len(cl.vs))
-// 	}
-// 	// does it have all the same vectors?
-// 	for _, v := range newVS {
-// 		_, exists := cl.vm[v]
-// 		if !exists {
-// 			return fmt.Errorf("Not a reordering - vector 0x%x not in old vector space", v)
-// 		}
-// 	}
-// 	// seems legit, let's proceed.
-// 	cl.vs = newVS
-// 	m := make(map[uint]uint)
-// 	for i, v := range newVS {
-// 		m[v] = uint(i)
-// 	}
-// 	cl.vm = m
-// 	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
-// 	e := cl.buildTheta(cl.params.Random, cl.params.Seed)
-// 	return e
-// }
-
+// VectorSpace returns a slice of the underlying vectors. For the code loops
+// we are working with, these are just the unsigned loop elements.
 func (cl *CL) VectorSpace() (vecs []uint) {
 	return cl.vs
 }
 
+// VectorIdxMap returns a map from vectors to their index in the (ordered) VectorSpace.
 func (cl *CL) VectorIdxMap() (m map[uint]uint) {
 	// This is handy if you want to quickly find out the index for a vector.
 	return cl.vm
 }
 
+// Decompose splits a vector into two vectors that can be expressed as
+// respective linear combinations of the first and last half of the basis.
 func (cl *CL) Decompose(vec uint) (v, w uint, e error) {
 	// We build vectors by taking an index 0 <= i < 4096, and then XORing in
 	// each basis vector which corresponds to a 1 bit in that index. That
@@ -182,6 +164,7 @@ func (cl *CL) Decompose(vec uint) (v, w uint, e error) {
 	return
 }
 
+// PrintBasis displays the loop basis.
 func (cl *CL) PrintBasis() {
 	fmt.Print("----------\n")
 	for i, vec := range cl.basis {
@@ -190,6 +173,7 @@ func (cl *CL) PrintBasis() {
 	fmt.Print("----------\n")
 }
 
+// PrintLoopElems displays the loop elements.
 func (cl *CL) PrintLoopElems() {
 	fmt.Print("----------\n")
 	for i, cle := range cl.LoopElems() {
@@ -198,6 +182,7 @@ func (cl *CL) PrintLoopElems() {
 	fmt.Print("----------\n")
 }
 
+// PrintVectorSpace displays the underlying vector space.
 func (cl *CL) PrintVectorSpace() {
 	fmt.Print("----------\n")
 	for i, vec := range cl.VectorSpace() {
@@ -280,6 +265,7 @@ func (cl *CL) verifyMoufang2() (e error) {
 	return nil
 }
 
+// IsMoufang checks whether the loop is Moufang.
 func (cl *CL) IsMoufang() bool {
 	e := cl.verifyMoufang2()
 	return e == nil
@@ -333,6 +319,7 @@ func (cl *CL) verifyAssoc2() bool {
 	return true
 }
 
+// IsAssoc checks whether the loop is fully associative (ie a group).
 func (cl *CL) IsAssoc() (isAssoc bool) {
 	return cl.verifyAssoc2()
 }
@@ -357,6 +344,7 @@ func (cl *CL) setThetaByVec(v1, v2, val uint) error {
 	return nil
 }
 
+// ThetaByVec returns theta(v1, v2) where v1 and v2 are vectors in the underlying space.
 func (cl *CL) ThetaByVec(v1, v2 uint) (uint, error) {
 	i1, ok := cl.vm[v1]
 	if !ok {
@@ -383,6 +371,7 @@ func (cl *CL) setThetaByIdx(i1, i2, val uint) error {
 	return nil
 }
 
+// ThetaByIdx returns theta(i1, i2) where i1 and i2 are indicies into the vector space.
 func (cl *CL) ThetaByIdx(i1, i2 uint) (uint, error) {
 	if i1 >= 1<<cl.basisLen || i2 >= 1<<cl.basisLen {
 		return 0, fmt.Errorf("Args to ThetaByIdx (%x, %x) overflow bitstring of len %d", i1, i2, cl.size*cl.size)
@@ -509,124 +498,124 @@ func (cl *CL) buildTheta(random bool, seed int64) error {
 // old images. The issue is that the path supplied is too small, so what's
 // actually happening is that only the first 2^64 choices are being changed by
 // a given path and the rest ends up being deterministic.
-func (cl *CL) buildThetaWithPath(pathGiven uint, seed int64) error {
+// func (cl *CL) buildThetaWithPath(pathGiven uint, seed int64) error {
 
-	var x uint
+// 	var x uint
 
-	// cf [Gri86] 226-7
-	i := uint(0)
-	random := false
-	if pathGiven == RandomTheta {
-		random = true
-		if seed == 0 {
-			rand.Seed(time.Now().UnixNano())
-		} else {
-			rand.Seed(seed)
-		}
-	}
-	// we might not take exactly the given path. If the caller supplies a 1
-	// for a position that must be 0, we ignore it.
-	var pathTaken uint
+// 	// cf [Gri86] 226-7
+// 	i := uint(0)
+// 	random := false
+// 	if pathGiven == RandomTheta {
+// 		random = true
+// 		if seed == 0 {
+// 			rand.Seed(time.Now().UnixNano())
+// 		} else {
+// 			rand.Seed(seed)
+// 		}
+// 	}
+// 	// we might not take exactly the given path. If the caller supplies a 1
+// 	// for a position that must be 0, we ignore it.
+// 	var pathTaken uint
 
-	// We build a chain of subspaces V0<V1<V2...<Vk, and define Wk to be
-	// Vk+1 - Vk.
-	// Intuitively, Wk contains the vectors that will be added when we add the
-	// next basis vector bk
+// 	// We build a chain of subspaces V0<V1<V2...<Vk, and define Wk to be
+// 	// Vk+1 - Vk.
+// 	// Intuitively, Wk contains the vectors that will be added when we add the
+// 	// next basis vector bk
 
-	b0 := cl.basis[0]
-	// basic assumption about V0, other than normalization, which is 'set' for
-	// free, since the bitstring defaults to 00..0
-	e := cl.setThetaByVec(b0, b0, (BitWeight(b0)/4)%2)
-	if e != nil {
-		return e
-	}
+// 	b0 := cl.basis[0]
+// 	// basic assumption about V0, other than normalization, which is 'set' for
+// 	// free, since the bitstring defaults to 00..0
+// 	e := cl.setThetaByVec(b0, b0, (BitWeight(b0)/4)%2)
+// 	if e != nil {
+// 		return e
+// 	}
 
-	Vk := []uint{0, b0} // span(b0)
+// 	Vk := []uint{0, b0} // span(b0)
 
-	for _, bk := range cl.basis[1:] {
+// 	for _, bk := range cl.basis[1:] {
 
-		// create Wk by combining bk with every vector in Vk
-		Wk := []uint{}
-		for _, v := range Vk {
-			Wk = append(Wk, bk^v)
-		}
+// 		// create Wk by combining bk with every vector in Vk
+// 		Wk := []uint{}
+// 		for _, v := range Vk {
+// 			Wk = append(Wk, bk^v)
+// 		}
 
-		// D1 - define {bk} x Vk and deduce Vk x {bk}
-		// log.Printf("Starting D1")
-		for _, v := range Vk {
-			// theta(bk,0) must be 0 (normalized cocycle), but anything else is up for grabs.
-			if v != 0 {
-				if random {
-					x = uint(rand.Uint32() & 1) // a random bit
-				} else {
-					x = pathGiven & 1
-				}
-				cl.setThetaByVec(bk, v, x)
-				cl.setThetaByVec(v, bk, ((BitWeight(v&bk)/2)+x)%2)
-			} else {
-				// theta(bk,v) is implicitly 'set' to 0 in the bitstring
-				cl.setThetaByVec(v, bk, (BitWeight(v&bk)/2)%2) // x is forced to be 0
-			}
-			pathGiven >>= 1
-			pathTaken |= x << i
-			i++
-		}
+// 		// D1 - define {bk} x Vk and deduce Vk x {bk}
+// 		// log.Printf("Starting D1")
+// 		for _, v := range Vk {
+// 			// theta(bk,0) must be 0 (normalized cocycle), but anything else is up for grabs.
+// 			if v != 0 {
+// 				if random {
+// 					x = uint(rand.Uint32() & 1) // a random bit
+// 				} else {
+// 					x = pathGiven & 1
+// 				}
+// 				cl.setThetaByVec(bk, v, x)
+// 				cl.setThetaByVec(v, bk, ((BitWeight(v&bk)/2)+x)%2)
+// 			} else {
+// 				// theta(bk,v) is implicitly 'set' to 0 in the bitstring
+// 				cl.setThetaByVec(v, bk, (BitWeight(v&bk)/2)%2) // x is forced to be 0
+// 			}
+// 			pathGiven >>= 1
+// 			pathTaken |= x << i
+// 			i++
+// 		}
 
-		// D2 - deduce {bk} x Wk and Wk x {bk}
-		// log.Printf("Starting D2")
-		for _, v := range Vk {
-			a, e := cl.ThetaByVec(bk, v)
-			if e != nil {
-				return e
-			}
-			// It looks weird that we're looping over Vk here, but remember
-			// that bk^v is an element of _Wk_ not Vk
-			cl.setThetaByVec(bk, bk^v, (BitWeight(bk)/4+uint(a))%2)
-			cl.setThetaByVec(bk^v, bk, (BitWeight(bk&(bk^v))/2+(BitWeight(bk)/4+uint(a))%2)%2)
-		}
+// 		// D2 - deduce {bk} x Wk and Wk x {bk}
+// 		// log.Printf("Starting D2")
+// 		for _, v := range Vk {
+// 			a, e := cl.ThetaByVec(bk, v)
+// 			if e != nil {
+// 				return e
+// 			}
+// 			// It looks weird that we're looping over Vk here, but remember
+// 			// that bk^v is an element of _Wk_ not Vk
+// 			cl.setThetaByVec(bk, bk^v, (BitWeight(bk)/4+uint(a))%2)
+// 			cl.setThetaByVec(bk^v, bk, (BitWeight(bk&(bk^v))/2+(BitWeight(bk)/4+uint(a))%2)%2)
+// 		}
 
-		// D3 - deduce Wk x Wk
-		// log.Printf("Starting D3")
-		for _, v := range Vk {
-			for _, v2 := range Vk {
-				w := bk ^ v2
-				a, e := cl.ThetaByVec(v, bk)
-				if e != nil {
-					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk)
-					return e
-				}
-				b, e := cl.ThetaByVec(v, bk^w)
-				if e != nil {
-					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk^w)
-					return e
-				}
-				c, e := cl.ThetaByVec(w, bk)
-				if e != nil {
-					e := fmt.Errorf("Error getting %.2x, %.2x: %s", w, bk)
-					return e
-				}
-				res := (BitWeight(v&w)/2 + uint(a) + uint(b) + uint(c)) % 2
-				cl.setThetaByVec(w, bk^v, res)
-			}
-		}
+// 		// D3 - deduce Wk x Wk
+// 		// log.Printf("Starting D3")
+// 		for _, v := range Vk {
+// 			for _, v2 := range Vk {
+// 				w := bk ^ v2
+// 				a, e := cl.ThetaByVec(v, bk)
+// 				if e != nil {
+// 					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk)
+// 					return e
+// 				}
+// 				b, e := cl.ThetaByVec(v, bk^w)
+// 				if e != nil {
+// 					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk^w)
+// 					return e
+// 				}
+// 				c, e := cl.ThetaByVec(w, bk)
+// 				if e != nil {
+// 					e := fmt.Errorf("Error getting %.2x, %.2x: %s", w, bk)
+// 					return e
+// 				}
+// 				res := (BitWeight(v&w)/2 + uint(a) + uint(b) + uint(c)) % 2
+// 				cl.setThetaByVec(w, bk^v, res)
+// 			}
+// 		}
 
-		// D4 - deduce Wk x Vk and Vk x Wk
-		// log.Printf("Starting D4")
-		for _, v := range Vk {
-			for _, v2 := range Vk {
-				w := bk ^ v2
-				a, e := cl.ThetaByVec(w, v^w)
-				if e != nil {
-					return e
-				}
-				cl.setThetaByVec(w, v, (BitWeight(w)/4+uint(a))%2)
-				cl.setThetaByVec(v, w, (BitWeight(v&w)/2+(BitWeight(w)/4+uint(a))%2)%2)
-			}
-		}
+// 		// D4 - deduce Wk x Vk and Vk x Wk
+// 		// log.Printf("Starting D4")
+// 		for _, v := range Vk {
+// 			for _, v2 := range Vk {
+// 				w := bk ^ v2
+// 				a, e := cl.ThetaByVec(w, v^w)
+// 				if e != nil {
+// 					return e
+// 				}
+// 				cl.setThetaByVec(w, v, (BitWeight(w)/4+uint(a))%2)
+// 				cl.setThetaByVec(v, w, (BitWeight(v&w)/2+(BitWeight(w)/4+uint(a))%2)%2)
+// 			}
+// 		}
 
-		Vk = append(Vk, Wk...)
+// 		Vk = append(Vk, Wk...)
 
-	}
-	cl.Seed = fmt.Sprintf("0x%x", pathTaken)
-	return nil
-}
+// 	}
+// 	cl.Seed = fmt.Sprintf("0x%x", pathTaken)
+// 	return nil
+// }

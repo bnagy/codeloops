@@ -6,6 +6,8 @@ import (
 	"log"
 )
 
+// AddElems tries recursively to add n vectors to 'to' from 'from', to produce
+// a set which passes the supplied verify function.
 func AddElems(to []int, from []uint, n int, verify func([]int) bool) (bool, []int) {
 	for i := to[len(to)-1] + 1; i < len(from); i++ {
 		candidate := append(to, i)
