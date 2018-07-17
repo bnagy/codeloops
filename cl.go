@@ -20,12 +20,16 @@ type CL struct {
 	basisLen uint // elems in the basis
 	size     uint // elems in the loop
 	theta    *Bitstring.Bitstring
+	alpha    *Bitstring.Bitstring
+	alphaSz  uint
 	Seed     string
 	vs       []uint
 	vsV      []uint
 	vsW      []uint
+	vsAlpha  []uint
 	halfMask uint
 	vm       map[uint]uint
+	vmAlpha  map[uint]uint
 }
 
 type CLParams struct {
@@ -47,13 +51,36 @@ func NewCL(p CLParams) (cl *CL, e error) {
 		m[v] = uint(i)
 	}
 	cl.vm = m
+
+	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
+	e = cl.buildTheta(p.Random, p.Seed)
+	if e != nil {
+		return
+	}
+
 	// No idea what will happen for odd-length bases
 	cl.vsV = VectorSpace(p.Basis[:cl.basisLen/2])
 	cl.vsW = VectorSpace(p.Basis[cl.basisLen/2:])
+	// HACK this is bigger than it needs to be, because we have a second copy
+	// of the zero vector in vsW. The trouble is that all the calculations for
+	// setting indicies in the Bitstring work much better if we keep all of
+	// the shifts as integers, ie we have the sides of the alpha square stay a
+	// power of two.
+	cl.vsAlpha = append(cl.vsV, cl.vsW...)
+	m2 := make(map[uint]uint)
+	for i, v := range cl.vsAlpha {
+		m2[v] = uint(i)
+	}
+	// HACK make sure the index for the zero vector is still zero, since it
+	// was written twice above.
+	m2[0] = 0
+	cl.vmAlpha = m2
 	mask, _ := strconv.ParseUint(strings.Repeat("1", int(cl.basisLen/2)), 2, 0)
 	cl.halfMask = uint(mask)
-	cl.theta = Bitstring.NewBitstring(int(cl.size * cl.size))
-	e = cl.buildTheta(p.Random, p.Seed)
+	cl.alphaSz = uint(len(cl.vsV) + len(cl.vsW))
+	cl.alpha = Bitstring.NewBitstring(int(cl.alphaSz * cl.alphaSz))
+	e = cl.buildAlpha()
+
 	return
 }
 
@@ -154,10 +181,10 @@ func (cl *CL) Decompose(vec uint) (v, w uint, e error) {
 	// 6 bits, we can treat each half as an index into a vector space of size
 	// 64 (2^6).
 	idx := cl.vm[vec]
-	bottom6 := uint(idx) & cl.halfMask
-	top6 := idx >> (cl.basisLen / 2)
-	v = cl.vsV[bottom6]
-	w = cl.vsW[top6]
+	lower := uint(idx) & cl.halfMask
+	upper := idx >> (cl.basisLen / 2)
+	v = cl.vsV[lower]
+	w = cl.vsW[upper]
 	if v^w != vec {
 		return 0, 0, fmt.Errorf("Failed to decompose vec 0x%x", vec)
 	}
@@ -331,13 +358,11 @@ func (cl *CL) setThetaByVec(v1, v2, val uint) error {
 	}
 	i2, ok := cl.vm[v2]
 	if !ok {
-		return fmt.Errorf("Vector %x not in vector space", v1)
+		return fmt.Errorf("Vector %x not in vector space", v2)
 	}
 	if i1 >= 1<<cl.basisLen || i2 >= 1<<cl.basisLen {
 		return fmt.Errorf("Args to setThetaByVec (%x, %x) overflow bitstring of len %d", v1, v2, cl.size*cl.size)
 	}
-	// log.Printf("t(%d,%d) = %d", i1, i2, val)
-	// time.Sleep(50 * time.Millisecond)
 	if val > 0 {
 		cl.theta.SetBit(int(i1<<cl.basisLen | i2))
 	}
@@ -352,9 +377,45 @@ func (cl *CL) ThetaByVec(v1, v2 uint) (uint, error) {
 	}
 	i2, ok := cl.vm[v2]
 	if !ok {
-		return 0, fmt.Errorf("Vector %x not in vector space", v1)
+		return 0, fmt.Errorf("Vector %x not in vector space", v2)
 	}
 	return uint(cl.theta.GetBit(int(i1<<cl.basisLen | i2))), nil
+}
+
+func (cl *CL) ThetaAlphaByVec(x, y uint) (uint, error) {
+	v1, w1, err := cl.Decompose(x)
+	if err != nil {
+		return 0, err
+	}
+	v2, w2, err := cl.Decompose(y)
+	if err != nil {
+		return 0, err
+	}
+	a, err := cl.AlphaByVec(v1, v2)
+	if err != nil {
+		return 0, err
+	}
+	b, err := cl.AlphaByVec(w1, w2)
+	if err != nil {
+		return 0, err
+	}
+	c, err := cl.AlphaByVec(v1, w1)
+	if err != nil {
+		return 0, err
+	}
+	d, err := cl.AlphaByVec(w2, v2)
+	if err != nil {
+		return 0, err
+	}
+	e, err := cl.AlphaByVec(v1^v2, w1^w2)
+	if err != nil {
+		return 0, err
+	}
+	f := BitWeight(v2&(w1^w2)) / 2
+	g := BitWeight(v1 & v2 & (w1 ^ w2))
+	h := BitWeight((w1 & w2 & v2))
+	i := BitWeight(v1 & w1 & (v2 ^ w2))
+	return (a + b + c + d + e + f + g + h + i) % 2, nil
 }
 
 func (cl *CL) thetaByVecFast(v1, v2 uint) uint {
@@ -492,6 +553,67 @@ func (cl *CL) buildTheta(random bool, seed int64) error {
 	}
 	cl.Seed = fmt.Sprintf("0x%x", seed)
 	return nil
+}
+
+func (cl *CL) setAlphaByVec(v1, v2, val uint) error {
+
+	i1, ok := cl.vmAlpha[v1]
+	if !ok {
+		return fmt.Errorf("v1 %x not in vector space", v1)
+	}
+	i2, ok := cl.vmAlpha[v2]
+	if !ok {
+		return fmt.Errorf("v2 %x not in vector space", v2)
+	}
+	if i1 >= cl.alphaSz || i2 >= cl.alphaSz {
+		return fmt.Errorf("Args to setAlphaByVec (%x, %x) overflow bitstring of len %d", v1, v2, cl.alphaSz*cl.alphaSz)
+	}
+
+	// to optimise, we could check this right at the start, but I want the
+	// error checking to run.
+	if val > 0 {
+		cl.alpha.SetBit(int((i1 * cl.alphaSz) | i2))
+	}
+	return nil
+}
+
+func (cl *CL) buildAlpha() (e error) {
+	for i := uint(0); i < cl.alphaSz; i++ {
+		for j := uint(0); j < cl.alphaSz; j++ {
+			res, err := cl.ThetaByVec(cl.vsAlpha[i], cl.vsAlpha[j])
+			if err != nil {
+				e = fmt.Errorf("buildAlpha: %s", e)
+				return
+			}
+			err = cl.setAlphaByVec(cl.vsAlpha[i], cl.vsAlpha[j], res)
+			if err != nil {
+				e = fmt.Errorf("buildAlpha: %s", err)
+				return
+			}
+		}
+	}
+	return
+}
+
+// AlphaByVec returns alpha(v1, v2) where v1 and v2 are vectors in the Alpha square
+func (cl *CL) AlphaByVec(v1, v2 uint) (uint, error) {
+	i1, ok := cl.vmAlpha[v1]
+	if !ok {
+		return 0, fmt.Errorf("Vector %x not in alpha space", v1)
+	}
+	i2, ok := cl.vmAlpha[v2]
+	if !ok {
+		return 0, fmt.Errorf("Vector %x not in alpha space", v2)
+	}
+	return uint(cl.alpha.GetBit(int(i1*cl.alphaSz | i2))), nil
+}
+
+// AlphaByIdx returns alpha(i1, i2) where i1 and i2 are indicies into the Alpha square.
+func (cl *CL) AlphaByIdx(i1, i2 uint) (uint, error) {
+	if i1 >= cl.alphaSz || i2 >= cl.alphaSz {
+		return 0, fmt.Errorf("Args to AlphaByIdx (%x, %x) overflow bitstring of len %d", i1, i2, cl.alphaSz*cl.alphaSz)
+	}
+	return uint(cl.alpha.GetBit(int(i1*cl.alphaSz | i2))), nil
 }
 
 // This is legacy code which is here in case I ever need to regenerate some

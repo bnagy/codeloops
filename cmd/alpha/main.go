@@ -7,7 +7,7 @@ import (
 )
 
 const PIXEL = 4 // This should be even!
-const ALPHA = 127
+const ALPHA = 128
 
 func main() {
 
@@ -22,7 +22,7 @@ func main() {
 	cl, _ := codeloops.NewCL(codeloops.CLParams{Basis: codeloops.GolaySplitBasis})
 	alpha := []uint{}
 	vsV := codeloops.VectorSpace(v)
-	vsW := codeloops.VectorSpace(w)[1:] // we don't want the zero vector at the start
+	vsW := codeloops.VectorSpace(w) // [1:] // we don't want the zero vector at the start
 	alpha = append(vsV, vsW...)
 	if len(alpha) != ALPHA {
 		log.Fatalf("Bad length for alpha space %d, expected %d", len(alpha), ALPHA)
