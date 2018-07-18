@@ -432,6 +432,7 @@ func BenchmarkVerifyBasisGolay(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create CL: %s", err)
 	}
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		err = cl.VerifyBasis()
 		if err != nil {
@@ -509,6 +510,7 @@ func BenchmarkLoopElemsHamming(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create CL: %s", err)
 	}
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		cl.LoopElems()
 	}
@@ -519,6 +521,7 @@ func BenchmarkLoopElemsGolay(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create CL: %s", err)
 	}
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		cl.LoopElems()
 	}

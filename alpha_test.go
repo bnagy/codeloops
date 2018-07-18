@@ -140,3 +140,49 @@ func TestAlphaGolay(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkAlphaGolay(b *testing.B) {
+	cl, err := NewCL(CLParams{Basis: GolayBasis})
+	if err != nil {
+		b.Fatalf("Failed to create CL: %s", err)
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		v := cl.vs[b.N%len(cl.vs)]
+		w := cl.vs[len(cl.vs)-b.N%len(cl.vs)-1]
+		_, err = cl.ThetaAlphaByVec(v, w)
+		if err != nil {
+			b.Fatalf("Failed in ThetaAlpha: %s", err)
+		}
+
+	}
+}
+
+func BenchmarkAlphaGolayFast(b *testing.B) {
+	cl, err := NewCL(CLParams{Basis: GolayBasis})
+	if err != nil {
+		b.Fatalf("Failed to create CL: %s", err)
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		v := cl.vs[b.N%len(cl.vs)]
+		w := cl.vs[len(cl.vs)-b.N%len(cl.vs)-1]
+		cl.thetaAlphaByVecFast(v, w)
+	}
+}
+
+func BenchmarkThetaGolay(b *testing.B) {
+	cl, err := NewCL(CLParams{Basis: GolayBasis})
+	if err != nil {
+		b.Fatalf("Failed to create CL: %s", err)
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		v := cl.vs[b.N%len(cl.vs)]
+		w := cl.vs[len(cl.vs)-b.N%len(cl.vs)-1]
+		_, err = cl.ThetaByVec(v, w)
+		if err != nil {
+			b.Fatalf("Failed in Theta: %s", err)
+		}
+	}
+}

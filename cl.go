@@ -418,6 +418,21 @@ func (cl *CL) ThetaAlphaByVec(x, y uint) (uint, error) {
 	return (a + b + c + d + e + f + g + h + i) % 2, nil
 }
 
+func (cl *CL) thetaAlphaByVecFast(x, y uint) uint {
+	v1, w1, _ := cl.Decompose(x)
+	v2, w2, _ := cl.Decompose(y)
+	a := cl.alphaByVecFast(v1, v2)
+	b := cl.alphaByVecFast(w1, w2)
+	c := cl.alphaByVecFast(v1, w1)
+	d := cl.alphaByVecFast(w2, v2)
+	e := cl.alphaByVecFast(v1^v2, w1^w2)
+	f := BitWeight(v2&(w1^w2)) / 2
+	g := BitWeight(v1 & v2 & (w1 ^ w2))
+	h := BitWeight((w1 & w2 & v2))
+	i := BitWeight(v1 & w1 & (v2 ^ w2))
+	return (a + b + c + d + e + f + g + h + i) % 2
+}
+
 func (cl *CL) thetaByVecFast(v1, v2 uint) uint {
 	return uint(cl.theta.GetBit(int(cl.vm[v1]<<cl.basisLen | cl.vm[v2])))
 }
@@ -606,6 +621,10 @@ func (cl *CL) AlphaByVec(v1, v2 uint) (uint, error) {
 		return 0, fmt.Errorf("Vector %x not in alpha space", v2)
 	}
 	return uint(cl.alpha.GetBit(int(i1*cl.alphaSz | i2))), nil
+}
+
+func (cl *CL) alphaByVecFast(v1, v2 uint) uint {
+	return uint(cl.alpha.GetBit(int(cl.vmAlpha[v1]*cl.alphaSz | cl.vmAlpha[v2])))
 }
 
 // AlphaByIdx returns alpha(i1, i2) where i1 and i2 are indicies into the Alpha square.
