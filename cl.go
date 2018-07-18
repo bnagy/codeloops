@@ -138,6 +138,20 @@ func (cl *CL) Mul(x, y, res *CLElem) (*CLElem, error) {
 	return res, nil
 }
 
+// MulAlpha performs multiplication, but gets theta values by calculation
+// using the much smaller Alpha square.
+func (cl *CL) MulAlpha(x, y, res *CLElem) (*CLElem, error) {
+	// theta is the cocycle that maps from C^2 -> {0,1}
+	t, err := cl.ThetaAlphaByVec(x.vec, y.vec)
+	if err != nil {
+		return nil, err
+	}
+	// xor is addition in the ambient vector field.
+	res.sgn = x.sgn ^ y.sgn ^ t
+	res.vec = x.vec ^ y.vec
+	return res, nil
+}
+
 // Size returns the number of elements in the loop.
 func (cl *CL) Size() int {
 	return int(cl.size)
@@ -418,6 +432,7 @@ func (cl *CL) ThetaAlphaByVec(x, y uint) (uint, error) {
 	return (a + b + c + d + e + f + g + h + i) % 2, nil
 }
 
+// Despite the name, this is not actually much faster.
 func (cl *CL) thetaAlphaByVecFast(x, y uint) uint {
 	v1, w1, _ := cl.Decompose(x)
 	v2, w2, _ := cl.Decompose(y)

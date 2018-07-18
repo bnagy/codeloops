@@ -141,6 +141,38 @@ func TestAlphaGolay(t *testing.T) {
 	}
 }
 
+func TestMulAlphaMatch(t *testing.T) {
+
+	cl, err := NewCL(CLParams{Basis: GolaySplitBasis})
+	if err != nil {
+		t.Fatalf("Failed to create CL: %s", err)
+	}
+	elems := cl.LoopElems()
+	x, y, z := new(CLElem), new(CLElem), new(CLElem)
+	a, b, c := new(CLElem), new(CLElem), new(CLElem)
+
+	for i := 0; i < len(elems); i++ {
+		for j := 0; j < len(elems); j++ {
+
+			x, y = &elems[i], &elems[j]
+			a, b = &elems[i], &elems[j]
+
+			// LHS
+			_, err = cl.Mul(x, y, z)
+			if err != nil {
+				t.Fatalf("Failed in Mul: %s", err)
+			}
+			_, err = cl.MulAlpha(a, b, c)
+			if err != nil {
+				t.Fatalf("Failed in MulAlpha: %s", err)
+			}
+			if z.sgn != c.sgn || z.vec != c.vec {
+				t.Fatalf("Mismatch in Mul!")
+			}
+		}
+	}
+}
+
 func BenchmarkAlphaGolay(b *testing.B) {
 	cl, err := NewCL(CLParams{Basis: GolayBasis})
 	if err != nil {
