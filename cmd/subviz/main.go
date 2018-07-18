@@ -23,7 +23,7 @@ const CELL_LABELS = false
 func main() {
 
 	basis := codeloops.GolayBasis
-	choose := 7
+	choose := 5
 
 	subspaces := 0
 	codeloops.SetCombinationsWithoutReplacement(uint(len(basis)), uint(choose), func(s []uint) {
