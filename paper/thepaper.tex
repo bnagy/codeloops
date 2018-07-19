@@ -44,9 +44,12 @@ hypertexnames =false
 \DeclareMathOperator{\Hamming}{Hamming}
 \DeclareMathOperator{\dom}{dom}
 \DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\Length}{length}
 \newcommand{\F}{\mathbb{F}}
 \def\cP{\mathcal{P}}
 \def\FF{\mathbb{F}}
+\def\And{\mathbin{\&}}
+\def\Plus{\oplus}
 
 
 \begin{document}
@@ -77,98 +80,97 @@ Code loops are central extensions, in the category of codes, of the underlying a
 Much as central extensions of groups can be described by, and constructed from, 2-cocycles, a central extension as above can be described by a \emph{twisted cocycle} $\theta\colon C\times C \to \FF_2$. 
 Instead of the cocycle identity, $\theta$ must satisfy
 \[
-	\theta(x,y) + \theta(x,y+z) + \theta(x+y,z) + \theta(y,z) = |x\wedge y \wedge z|,
+	\theta(x,y) + \theta(x,y\Plus z) + \theta(x\Plus y,z) + \theta(y,z) = |x\And  y \And  z| \mod 2,
 \]
-where $\wedge$ is co\"ordinate-wise multiplication,\marginnote{that is, bit-wise AND} and $|\cdot|$ is the bit-weight of a vector, namely the number of non-zero entries.
+where $\And $ is co\"ordinate-wise multiplication,\sidenote{that is, bit-wise AND} and $|\cdot|$ is the bit-weight of a vector, namely the number of non-zero entries.
 
 Griess outlines a method to compute $\theta$, given a total flag in the code $C$, as an existence proof for code loops.
 However, it is far from obvious what properties the resulting twisted cocycle (and so the code loop) has, apart from being unique up to a coboundary.
 This paper gives an implementation of Griess' procedure and a means of reconstructing any value of a precalculated twisted cocycle from a  lookup table much smaller that the full data of the twisted cocycle.
-This will ideally lead to feasable computation with the Parker loop.
+% This will ideally lead to feasable computation with the Parker loop.
 
+% \subsection{The algorithm}
 
-\section{The algorithm}
+% Griess' method starts by choosing a total flag and then choosing a specified new vector in each higher-dimensional subspace, but we have rather chosen to input a basis $\{v_0,\ldots,v_{n-1}\}$, and then generate the flag $V_0 \subset V_1 \subset \cdots \subset V_{n-1} = C$ as $V_i = \Span\{v_0,\ldots,v_i\}$.
+% Ater an initialisation step (D0), the algorithm loops through steps D1-D4 for each subspace $V_1$,\ldots,$V_{n-1}$.
 
-Griess' method starts by choosing a total flag and then choosing a specified new vector in each higher-dimensional subspace, but we have rather chosen to input a basis $\{v_0,\ldots,v_{n-1}\}$, and then generate the flag $V_0 \subset V_1 \subset \cdots \subset V_{n-1} = C$ as $V_i = \Span\{v_0,\ldots,v_i\}$.
-Ater an initialisation step (D0), the algorithm loops through steps D1-D4 for each subspace $V_1$,\ldots,$V_{n-1}$.
-
-Here's a sample of the first pass of the algorithm, though we need to check this against the implementation, and it should generalise to $v \in \Span(\text{already considered vectors})$.\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms}}
-
+% Here's a sample of the first pass of the algorithm, though we need to check this against the implementation, and it should generalise to $v \in \Span(\text{already considered vectors})$.\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms}}
+\medskip
 \begin{algorithm}[H]
 \SetAlgoLined
-\KwData{basis $\{b_0,b_1,\ldots,b_{n-1}\}$ for the code $C$}
+\KwData{basis $B = \{b_0,b_1,\ldots,b_{n-1}\}$ for the code $C$}
 \KwResult{twisted cocycle $\theta\colon C\times C\to \FF_2$, encoded as a square array of elements from $\FF_2$, with rows and columns indexed by $C$ }
-Initialise: set all values to $0$\;
+Initialise: For all $c_1,c_2 \in C$,\quad $\theta(c_1,c_2) \leftarrow 0$\;
 \tcp{step D0: Vk here is span(b0)}
 $\theta(b_0,b_0) \leftarrow |b_0|/4 \mod 2$\;
-\ForAll{$1\leq k\leq n-1$}{
+\ForAll{$1\leq k\leq \Length(B)$}{
 	Define $V_k :=\Span\{b_0,\ldots,b_{k-1}\}$\;
-	\tcp{step D1: define theta on \{bk\} x Vk and deduce on Vk x \{bk\}}
+	\tcp{step D1: define theta on \{bk\} x Vk and then deduce on Vk x \{bk\}}
 	\ForAll{$v\in V_k$}{
 		\eIf{$v\neq0$}{
 			$\theta(b_k,v) \leftarrow \text{random}$\;
-			$\theta(v,b_k) \leftarrow |v\wedge b_k|/2+\theta(b_k,v) \mod 2$\;
+			$\theta(v,b_k) \leftarrow |v\And b_k|/2+\theta(b_k,v) \mod 2$\;
 		}
 		{
-			\tcp{$\theta(b_k,v)$ is already implicity set to $0$}
-			$\theta(v,b_k)\leftarrow |v\wedge b_k| \mod 2$ (but isn't this also always $0$?)\;
+			\tcp{$\theta(b_k,v)$ is already set to $0$}
+			$\theta(v,b_k)\leftarrow |v\And b_k|/2 \mod 2$\;
 		}
 	}
 	\tcp{step D2: deduce theta on \{bk\} x Wk and Wk x \{bk\}}
 	\ForAll{$v\in V_k$}{
-		$\theta(b_k,b_k+v) \leftarrow |b_k|/4 + \theta(b_k,v)\mod 2$\;
-		$\theta(b_k+v,b_k) \leftarrow |b_k\wedge (b_k+v)|/2 + |b_k|/4 + \theta(b_k,v)\mod 2$\;
+		$\theta(b_k,b_k\Plus v) \leftarrow |b_k|/4 + \theta(b_k,v)\mod 2$\;
+		$\theta(b_k\Plus v,b_k) \leftarrow |b_k\And (b_k\Plus v)|/2 + |b_k|/4 + \theta(b_k,v)\mod 2$\;
 	}
 	\tcp{step D3: deduce theta on Wk x Wk}
 	\ForAll{$v_1\in V_k$}{
 		\ForAll{$v_2\in V_k$}{
-			$w\leftarrow b_k + v_2$\;
+			$w\leftarrow b_k \Plus v_2$\;
 			$a\leftarrow \theta(v_1,b_k)$\;
-			$b\leftarrow \theta(v_1,b_k+w)$ (but isn't $b_k+w=v_2$?)\;
+			$b\leftarrow \theta(v_1,b_k\Plus w)$ (but isn't $b_k\Plus w=v_2$?)\;
 			$c\leftarrow \theta(w,b_k)$\;
-			$r \leftarrow |v_1\wedge w|/2 + a + b + c \mod 2$\;
-			$\theta(w,b_k+v_1) \leftarrow r$
+			$r \leftarrow |v_1\And w|/2 + a + b + c \mod 2$\;
+			$\theta(w,b_k\Plus v_1) \leftarrow r$
 		}
 	}
 	\tcp{step D4: deduce theta on Wk x Vk and Vk x Wk}
 	\ForAll{$v_1\in V_k$}{
 		\ForAll{$v_2\in V_k$}{
-			$w\leftarrow b_k + v_2$\;
-			$a\leftarrow \theta(w,v_1+w)$\;
+			$w\leftarrow b_k \Plus v_2$\;
+			$a\leftarrow \theta(w,v_1\Plus w)$\;
 			$\theta(w,v_1) \leftarrow |w|/4 + a \mod 2$\;
-			$\theta(v_1,w) \leftarrow |v\wedge w|/2 + |w|/4 + a \mod 2$\;
+			$\theta(v_1,w) \leftarrow |v\And w|/2 + |w|/4 + a \mod 2$\;
 		}
 	}
 }
 \caption{Extracted from Griess' proof of existence of twisted cocycles for code loops}
 \end{algorithm}
 
-\begin{itemize}
+% \begin{itemize}
 
-	\item[D0:] $\theta(0,0) = \theta(0,v_0) = \theta(v_0,0) = 0, \quad \theta(v_0,v_0) = |v_0|/4$.
+% 	\item[D0:] $\theta(0,0) = \theta(0,v_0) = \theta(v_0,0) = 0, \quad \theta(v_0,v_0) = |v_0|/4$.
 
-	\item[D1:] For all $x \in \Span\{v_0\}$, 
-	\begin{itemize}
-		\item[] $\theta(v_1,x) = 0$, \marginnote{arbitrary choice, but with $\theta(v_1,0)=0$}
-		\item[] $\theta(x,v_1) = |x\cap v_1|/2$.
-	\end{itemize}
+% 	\item[D1:] For all $x \in \Span\{v_0\}$, 
+% 	\begin{itemize}
+% 		\item[] $\theta(v_1,x) = 0$, \marginnote{arbitrary choice, but with $\theta(v_1,0)=0$}
+% 		\item[] $\theta(x,v_1) = |x\cap v_1|/2$.
+% 	\end{itemize}
 
-	\item[D2:] For all $x \in \Span\{v_0\}$,
-	\begin{itemize}
-	 	\item[] $\theta(v_1,v_1+x) = |v_1|/4$,
-	 	\item[] $\theta(v_1 + x,v_1) = |v_1|/4 + |v_1\cap(v_1+x)|/2$.
-	 \end{itemize} 
-	 \item[D3:] For all $x,y\in \Span\{v_0\}$,
-	 \begin{itemize}
-	 	\item[] $\theta(v_1+x,v_1+y) = |y\cap(v_1+x)|/2 + |y\cap v_1|/2 + \theta(x,y) + |v_1|/4 + |v_1\cap(v_1+x)|/2$.
-	 \end{itemize}
-	 \item[D4:] For all $x,y\in \Span\{v_0\}$,
-	 \begin{itemize}
-	 	\item[] $\theta(v_1+x,y) = |v_1+x|/4 + \theta(v_1+x,v_1+x+y)$,
-	 	\item[] $\theta(y,v_1+x) = |y\cap(v_1+x)|/2 + \theta(v_1+x,y)$.
-	 \end{itemize}
+% 	\item[D2:] For all $x \in \Span\{v_0\}$,
+% 	\begin{itemize}
+% 	 	\item[] $\theta(v_1,v_1+x) = |v_1|/4$,
+% 	 	\item[] $\theta(v_1 + x,v_1) = |v_1|/4 + |v_1\cap(v_1+x)|/2$.
+% 	 \end{itemize} 
+% 	 \item[D3:] For all $x,y\in \Span\{v_0\}$,
+% 	 \begin{itemize}
+% 	 	\item[] $\theta(v_1+x,v_1+y) = |y\cap(v_1+x)|/2 + |y\cap v_1|/2 + \theta(x,y) + |v_1|/4 + |v_1\cap(v_1+x)|/2$.
+% 	 \end{itemize}
+% 	 \item[D4:] For all $x,y\in \Span\{v_0\}$,
+% 	 \begin{itemize}
+% 	 	\item[] $\theta(v_1+x,y) = |v_1+x|/4 + \theta(v_1+x,v_1+x+y)$,
+% 	 	\item[] $\theta(y,v_1+x) = |y\cap(v_1+x)|/2 + \theta(v_1+x,y)$.
+% 	 \end{itemize}
 
-\end{itemize} 
+% \end{itemize} 
 
 \section{Implementation}
 
@@ -190,8 +192,8 @@ We can split $C$ as $V\oplus W$ and denote the restriction of $\theta$ to $(V\cu
 
 We can write $\theta$ entirely in terms of $\alpha$ as follows:
 \begin{align*}
-	\theta(v_1+w_1,v_2+w_2)	& = \alpha(v_1,v_2)  + \alpha(w_1,w_2) + \alpha(v_1,w_1) + \alpha(w_2,v_2) + \alpha(v_1+v_2,w_1+w_2)\\
-							& + \frac12|v_2\wedge(w_1+w_2)| + |v_1\wedge v_2 \wedge (w_1+w_2)| + |w_1\wedge w_2 \wedge v_2| + |v_1\wedge w_1 \wedge (v_2 + w_2)| 
+	\theta(v_1\Plus w_1,v_2\Plus w_2)	& = \alpha(v_1,v_2)  + \alpha(w_1,w_2) + \alpha(v_1,w_1) + \alpha(w_2,v_2) + \alpha(v_1\Plus v_2,w_1\Plus w_2)\\
+							& + \frac12|v_2\And(w_1\Plus w_2)| + |v_1\And v_2 \And (w_1\Plus w_2)| + |w_1\And w_2 \And v_2| + |v_1\And w_1 \And (v_2 \Plus  w_2)| 
 \end{align*}
 \end{proposition}
 
@@ -202,10 +204,8 @@ So if $\theta$ has been already calculated using the algorithm in the section `G
 
 \section{Pretty pictures}
 
-Here is $\alpha$ (badly displayed because of .png$\to$.pdf, but we can make a svg one in Go)
-
 \begin{center}
-	\includegraphics[width=\textwidth]{alpha555_no_label.png}
+	\includegraphics[width=\textwidth]{alpha_6c1eff.pdf}
 \end{center}
 
 \bibliographystyle{alpha}
