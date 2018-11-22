@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-const PIXEL = 4 // This should be even!
+const PIXEL = 40 // This should be even!
 const ALPHA = 128
 
 func main() {

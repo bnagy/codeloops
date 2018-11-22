@@ -62,5 +62,5 @@ var GolaySplitBasis = []uint{
 	0x810663,
 	0x808e38,
 	0x804a17,
-	0xb1f6f3,
+	0x6c1eff, // 0xb1f6f3,
 }

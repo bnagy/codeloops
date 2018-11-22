@@ -405,6 +405,7 @@ func (cl *CL) ThetaAlphaByVec(x, y uint) (uint, error) {
 	if err != nil {
 		return 0, err
 	}
+	// With the split basis this will always be 0
 	a, err := cl.AlphaByVec(v1, v2)
 	if err != nil {
 		return 0, err
