@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nigelredding/Bitstring"
+	"github.com/bnagy/codeloops/BitString"
 )
 
 func main() {
