@@ -2,7 +2,7 @@ package codeloops
 
 import (
 	"fmt"
-	"github.com/nigelredding/BitString"
+	"github.com/bnagy/codeloops/BitString"
 	// "log"
 	"math/rand"
 	"strconv"

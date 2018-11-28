@@ -20,13 +20,15 @@ So far there are only tests. Run them:
 go test
 ```
 
-## License
+## License & Acknowledgements
 
 BSD Style. See LICENSE file for details.
 
+I have vendored the BitString package by Nigel Redding which seems to no longer exist.
+
 ## TODO
 
-Everything.
+Re-implement BitString, since it is fairly simple stuff and carries no license. :/
 
 ## Contributing
 
