@@ -547,17 +547,17 @@ func (cl *CL) buildTheta(random bool, seed int64) error {
 				w := bk ^ v2
 				a, e := cl.ThetaByVec(v, bk)
 				if e != nil {
-					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk)
+					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk, e)
 					return e
 				}
 				b, e := cl.ThetaByVec(v, bk^w)
 				if e != nil {
-					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk^w)
+					e := fmt.Errorf("Error getting %.2x, %.2x: %s", v, bk^w, e)
 					return e
 				}
 				c, e := cl.ThetaByVec(w, bk)
 				if e != nil {
-					e := fmt.Errorf("Error getting %.2x, %.2x: %s", w, bk)
+					e := fmt.Errorf("Error getting %.2x, %.2x: %s", w, bk, e)
 					return e
 				}
 				res := (BitWeight(v&w)/2 + uint(a) + uint(b) + uint(c)) % 2
