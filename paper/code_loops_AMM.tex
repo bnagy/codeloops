@@ -107,6 +107,37 @@ One can check that $d$ satisfies the \emph{cocycle identities}:
 	d(v,w)-d(u+v,w)+d(u,v+w)-d(u,v) = 0
 \]
 for all triples $u,v,w\in V$. It is also immediate from the definition that $d(0,0)=0$.
+An alternative visualisation is given in Figure~\ref{fig:cocycle for q8}.
+
+\begin{figure}[!b]
+% \begin{minipage}[b]{4cm}
+% \[
+% \begin{array}{c|cccc}
+% v\setminus w&00&10&01&11\\
+% \hline
+% 	00		& 0& 0& 0& 0\\
+% 	10		& 0& 1& 1& 0\\
+% 	01		& 0& 0& 1& 1\\
+% 	11		& 0& 1& 0& 1\\
+% \end{array}
+% \]
+% \end{minipage} 
+% \hspace{1cm}
+% \begin{tabular*}{0.35\textwidth}{c|cccc}
+% $v\setminus w$&00&10&01&11\\
+% \hline
+% 	00		& 0& 0& 0& 0\\
+% 	10		& 0& 1& 1& 0\\
+% 	01		& 0& 0& 1& 1\\
+% 	11		& 0& 1& 0& 1\\
+% \end{tabular*}
+% \hspace{3cm} 
+\begin{center}
+\includegraphics[height=2.5cm]{quaternion_cocyc} %%% Want this to be a pdf image, not png
+\end{center}
+\caption{The values of the cocycle $d\colon V\times V\to \FF_2$, with white = 0, black = 1.}
+\label{fig:cocycle for q8}
+\end{figure}
 
 
 The reason for this somewhat mysterious construction is that we can build a bijection of sets using $s$ and the isomorphism $\FF_2\simeq \{1,-1\}$, namely
@@ -150,7 +181,7 @@ This is what we aim to do below for the Parker loop, using a similar approach.
 % \end{tabular*}
 % \hspace{3cm} 
 \begin{center}
-\includegraphics[height=2.5cm]{../images/quaternion_cocyc} %%% Want this to be a pdf image, not png
+\includegraphics[height=2.5cm]{quaternion_cocyc} %%% Want this to be a pdf image, not png
 \end{center}
 \caption{The values of the cocycle $d\colon V\times V\to \FF_2$, with white = 0, black = 1.}
 \label{fig:cocycle for q8}
