@@ -22,9 +22,9 @@ go test
 
 ## License & Acknowledgements
 
-BSD Style. See LICENSE file for details.
-
-I have vendored the BitString package by Nigel Redding which seems to no longer exist.
+- FOR THE CODE: BSD Style. See [LICENSE](LICENSE.md) file for details.
+- FOR THE PAPER: CC-BY, see [`paper/README.md`](paper/README.md)
+- FOR THE VENDORED [BITSTRING](Bitstring/README.md) CODE: _NO_ license (original code not licensed)
 
 ## TODO
 
