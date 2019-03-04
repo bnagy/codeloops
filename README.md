@@ -2,7 +2,7 @@
 
 ## About
 
-`codeloops` is initial maths research code to implement code loops as extensions of doubly even binary codes.  Initial goal is to build the loop over the Hamming[8,4] code and then Parker loop over the Golay code. This is undergraduate code with no practical relevance for anyone except me.
+`codeloops` is initial maths research code to implement code loops as extensions of doubly even binary codes. For further details, consult the [paper](paper/README.md).
 
 ## Installation
 
@@ -14,17 +14,19 @@ $ go get github.com/bnagy/codeloops
 
 ## Usage
 
-So far there are only tests. Run them:
+Run tests:
 
 ```
 go test
 ```
 
+For descriptions of the various utility programs (some of which are really not for external consumption), see [`cmd/README.md`](cmd/README.md).
+
 ## License & Acknowledgements
 
 - FOR THE CODE: BSD Style. See [LICENSE](LICENSE.md) file for details.
 - FOR THE PAPER: CC-BY, see [`paper/README.md`](paper/README.md)
-- FOR THE VENDORED [BITSTRING](Bitstring/README.md) CODE: _NO_ license (original code not licensed)
+- FOR THE VENDORED [BITSTRING](BitString/README.md) CODE: _NO_ license (original code not licensed)
 
 ## TODO
 
