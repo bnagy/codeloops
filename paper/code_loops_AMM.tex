@@ -248,6 +248,7 @@ More accurately, Griess outlines the algorithm, using steps like `determine the 
 % Here's a sample of the first pass of the algorithm, though we need to check this against the implementation, and it should generalise to $v \in \Span(\text{already considered vectors})$.\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms}}
 
 \begin{algorithm}%[H]
+\caption{Reverse engineered from proof of Theorem 10 in \cite{Griess}.}\label{Griess algo}
 \SetAlgoLined
 \DontPrintSemicolon
 \KwData{Basis $B = \{b_0,b_1,\ldots,b_{n-1}\}$ for the code $C$}
@@ -299,7 +300,6 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 		}
 	}
 }
-\caption{Extracted from Griess's proof of existence of code cocycles}\label{Griess algo}
 \end{algorithm}
 
 We implemented this algorithm in the language Go \cite{RN_GH}, and applied it to the extended Golay code.
@@ -408,7 +408,7 @@ The rows of the left matrix below form the basis for $V$, and the rows of the ri
 
 
 \begin{acknowledgment}{Acknowledgment.}
-DMR is supported by the Australian Research Council's Discovery Projects scheme, ( project number DP180100383), funded by the Australian Government. \textbf{ADD MORE HERE, IF NEEDED}
+DMR is supported by the Australian Research Council's Discovery Projects scheme, (project number DP180100383), funded by the Australian Government. \textbf{ADD MORE HERE, IF NEEDED}
 \end{acknowledgment}
 
 \begin{thebibliography}{1}
@@ -417,14 +417,14 @@ DMR is supported by the Australian Research Council's Discovery Projects scheme,
 
 \bibitem{Griess} Robert L.\ Griess Jr., Code loops \emph{J.\ Algebra} \textbf{100} (1986) 224--234.
 
-\bibitem{RN_GH} ?David Michael Roberts?? and Ben Nagy, \emph{codeloops}, GitHub repository, (2019) \url{https://github.com/bnagy/codeloops}
+\bibitem{RN_GH} Ben Nagy and David Michael Roberts, \texttt{codeloops}, GitHub repository, (2019) \url{https://github.com/bnagy/codeloops}
 \end{thebibliography}
 
 \begin{biog}
-\item[Ben Nagy] is a student at the University of Adelaide, studying computational linguistics [etc etc]
+\item[Ben Nagy] is an MPhil.\ candidate at the University of Adelaide, researching computational stylistics for Latin Poetry.
 \begin{affil}
-University\\
-email
+Department of Classics, Archaeology \& Ancient History, The University of Adelaide\\
+benjamin.nagy@adelaide.edu.au
 \end{affil}
 
 \item[David Michael Roberts] is a mathematician specialising in category theory, geometry and a hodge-podge of other random topics.
