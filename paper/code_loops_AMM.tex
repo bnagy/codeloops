@@ -1,0 +1,445 @@
+\documentclass{article}
+\usepackage{custom} %% Have stripped out journal/publisher identifiers and trim marks
+% \usepackage{maa-monthly} %% For actual journal style
+\usepackage{textcomp}
+
+\usepackage{algorithm2e}
+
+%% IF YOU HAVE FONTS INSTALLED
+%\usepackage{mtpro2}
+%\usepackage{mathtime}
+\usepackage{amsfonts}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+ 
+\theoremstyle{definition}
+\newtheorem*{definition}{Definition}
+\newtheorem*{remark}{Remark}
+
+\def \cC {\mathcal{C}}
+\def \cG {\mathcal{G}}
+\def \FF {\mathbb{F}}
+\newcommand{\AND}{\mathbin{\texttt{\&}}}
+\DeclareMathOperator{\im}{im}
+\def\And{\mathbin{\&}}
+\def\Plus{+}
+\DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\Length}{length}
+
+\begin{document}
+
+\title{(Re)constructing code loops}
+\markright{Reconstructing code loops}
+\author{Ben Nagy and David Michael Roberts}
+
+\maketitle
+
+\begin{abstract}
+Write later.
+\end{abstract}
+
+
+\noindent
+The theory of codes makes for a fascinating study. 
+At their heart, codes are `merely' subspaces of vector spaces over some small finite field, with certain combinatorial properties.
+Why do such things exist? Like a lot of exceptional objects in combinatorics, it can come down to: ``because''.
+This makes constructing codes sometimes more of an art than something systematic.
+In this paper, we are going to consider the construction of certain [algebro-combinatoric] structures closely related to codes, called \emph{code loops}. 
+We will also only be considering the case where the base field is $\FF_2=\{0,1\}$, and refer to its elements as \emph{bits}.
+
+The first published example of a code loop appeared as a step in John Conway's construction of the Monster sporadic simple group \cite{Conway}. 
+The code loop Conway used originally appeared in an unpublished manuscript by Richard Parker.
+A general study of code loops was then made by Robert Griess \cite{Griess}.
+Griess also proved the existence of code loops by an algorithmic construction, starting from a particular type of code.
+
+Recall that the elements (or \emph{words}) in a code $\cC$, being vectors, can be combined by addition---this is a group operation and hence associative. 
+The elements of a code loop consist of a pair: a code word and one extra bit.
+The extra bit \emph{twists} the addition so that combination of code loop elements is a \emph{non-associative operation}: $(ab)c\not=a(bc)$.
+
+More specifically, while addition of words in a code is performed by co\"ordinatewise addition in $\FF_2$---bitwise XOR---the algebraic operation in a code loop is not so easily described.
+The code loop operation can be reconstructed from a function $\cC \times \cC \to \FF_2$ satisfying certain identities, called a \emph{twisted cocycle}.
+It is the computation and presentation of this function that will mainly concern us in this article, using Griess's algorithm \cite[proof of Theorem 10]{Griess}.
+As a result, we will observe some curious features of the Parker loop, obtained via experimentation and, it seems, previously unknown.
+
+\section{Extensions and cocycles.}
+
+As a warm-up, we will describe a more familiar structure using the techniques that will be used later. 
+Recall that the \emph{quaternion group} $Q_8$ is the group consisting of the positive and negative basis quaternions:
+\[
+	Q_8 = \{1,\, i,\, j,\, k,\,-1,\, -i,\, -j,\, -k\}
+\]
+The elements of $Q_8$ satisfy the identities
+\[
+	i^2 = j^2 = k^2 = -1, \quad ij=k.
+\]
+There is a surjective group homomorphism $\pi\colon Q_8 \to \FF_2 \times \FF_2 =: V$, sending $i$ to $(1,0)$ and $j$ to $(0,1)$, and the kernel of $\pi$ is the subgroup $\{1,-1\}\simeq \FF_2$.
+Moreover, this kernel is the \emph{center} of $Q_8$, the set of all elements that commute with every other element of the group.
+
+Now $Q_8$ is a nonabelian group, but both $\FF_2$ and $V$ are abelian groups.
+One might think that it shouldn't be possible to reconstruct $Q_8$ from the latter two groups, but it is! 
+That is, if we are given some extra information that uses only the two abelian groups.
+There is an obvious function $s\colon V \to Q_8$, sending $(0,0)$ to $1$, $(1,0)$ to $i$, $(0,1)$ to $j$ and $(1,1)$ to $k$.
+This almost looks like a group homomorphism, but it is not, as $(1,0) + (1,0) = (0,0)$ in $V$, but $i^2 \not= 1$ in $Q_8$.
+We can measure the failure of $s$ to be a group homomorphism by considering the two-variable function
+\[
+	d\colon V \times V \to \FF_2
+\]
+defined by $ (-1)^{d(v,w)} = s(v)s(w)s(v+w)^{-1}$. 
+It is a nice exercise to see that $s(v)s(w)s(v+w)^{-1}$ is always $\pm 1$, so that this definition makes sense. The values of $d(v,w)$ are given as:
+
+% \medskip
+\begin{center}
+\begin{tabular*}{0.35\textwidth}{c|cccc}
+$v\setminus w$&00&10&01&11\\
+\hline
+	00		& 0& 0& 0& 0\\
+	10		& 0& 1& 1& 0\\
+	01		& 0& 0& 1& 1\\
+	11		& 0& 1& 0& 1\\
+\end{tabular*}
+\end{center}
+where $00=(0,1)$, $10=(1,0)$ etc.
+If $s$ \emph{were} a homomorphism, $d$ would be constant at $0$.
+One can check that $d$ satisfies the \emph{cocycle identities}:
+\[
+	d(v,w)-d(u+v,w)+d(u,v+w)-d(u,v) = 0
+\]
+for all triples $u,v,w\in V$. It is also immediate from the definition that $d(0,0)=0$.
+
+
+The reason for this somewhat mysterious construction is that we can build a bijection of sets using $s$ and the isomorphism $\FF_2\simeq \{1,-1\}$, namely
+\[
+	\FF_2\times V \simeq \left(\{1\}\times V\right) \cup \left(\{-1\} \times V\right) \stackrel{\phi}{\longrightarrow}
+	\{1,\, i,\, j,\, k\}\cup \{-1,\, -i,\, -j,\, -k\} = Q_8
+\]
+If we define a new product operation on the \emph{set} $\FF_2\times V$ by
+\[
+	(s,v)\ast_d(t,w):=(s+ t+ d(v,w),v+w),
+\]
+then the cocycle identities ensure that this is in fact associative and further, a group operation.
+Finally, $\phi$ can be checked to be a homomorphism for the group operation on $Q_8$ and for $\ast_d$, hence is a group isomorphism.
+
+Thus we can reconstruct, at least up to isomorphism, the nonabelian group $Q_8$ from the two abelian groups $V$ and $\FF_2$, together with the \emph{cocycle} $d\colon V\times V\to \FF_2$.
+A table of the values of $d$ is shown in Figure~\ref{fig:cocycle for q8}, where $00=(0,0)$, $10 = (1,0)$ etc.
+If we didn't know about the group structure of $Q_8$ already we could construct it from scratch using $d$.
+This is what we aim to do below for the Parker loop, using a similar approach.
+
+\begin{figure}[!b]
+% \begin{minipage}[b]{4cm}
+% \[
+% \begin{array}{c|cccc}
+% v\setminus w&00&10&01&11\\
+% \hline
+% 	00		& 0& 0& 0& 0\\
+% 	10		& 0& 1& 1& 0\\
+% 	01		& 0& 0& 1& 1\\
+% 	11		& 0& 1& 0& 1\\
+% \end{array}
+% \]
+% \end{minipage} 
+% \hspace{1cm}
+% \begin{tabular*}{0.35\textwidth}{c|cccc}
+% $v\setminus w$&00&10&01&11\\
+% \hline
+% 	00		& 0& 0& 0& 0\\
+% 	10		& 0& 1& 1& 0\\
+% 	01		& 0& 0& 1& 1\\
+% 	11		& 0& 1& 0& 1\\
+% \end{tabular*}
+% \hspace{3cm} 
+\begin{center}
+\includegraphics[height=2.5cm]{../images/quaternion_cocyc} %%% Want this to be a pdf image, not png
+\end{center}
+\caption{The values of the cocycle $d\colon V\times V\to \FF_2$, with white = 0, black = 1.}
+\label{fig:cocycle for q8}
+\end{figure}
+
+% \begin{tabular*}{0.35\textwidth}{c|cccc}
+% $v\setminus w$&00&10&01&11\\
+% \hline
+% 	00		& 0& 0& 0& 0\\
+% 	10		& 0& 1& 1& 0\\
+% 	01		& 0& 0& 1& 1\\
+% 	11		& 0& 1& 0& 1\\
+% \end{tabular*}
+
+\section{Twisted cocycles and loops.}
+
+The construction in the previous section is a fairly typical case of reconstructing a central extension from a cocycle (although in general one does not even need the analogue of the group $V$ to be abelian). 
+However, we wish to go one step further, and construct a structure with a \emph{non-associative} product from a pair of abelian groups: the group $\FF_2$ and a vector space $V$.
+Instead of a cocycle, we use a \emph{twisted cocycle}: a function $\alpha\colon V\times V \to \FF_2$ like $d$ that instead satisfies
+\[
+	\alpha(v,w)-\alpha(u+v,w)+\alpha(u,v+w)-\alpha(u,v) = f(u,v,w),
+\]
+for a special \emph{twisting function} $f\colon V\times V\times V \to \FF_2$. We will assume that $\alpha$ satisfies $\alpha(0,v)=\alpha(v,0) = 0$ for all $v\in V$, a property that holds for 
+
+
+
+
+
+\section{Codes and code loops.}
+
+To describe this function we need to know about some extra operations that exist on vector spaces over the field $\FF_2$. 
+For $W=(\FF_2)^n$ a vector space over $\FF_2$ and vectors $v,w\in W$, there is a new vector $v\AND w \in W$ given by
+\[
+	v\AND w := (v_1w_1,v_2w_2,\ldots,v_nw_n).
+\]
+Note that if we take a code $\cC \subset (\FF_2)^n$, then we aren't guaranteed that $\cC$ is closed under this operation.
+The other operation takes a vector $v\in W$ and returns the sum, as an integer, of its entries: $|v| := v_1 + \cdots + v_n$. Equivalently, it is the number of nonzero entries in $v$.
+
+The desired twisting function is a combination of these two, namely $f(u,v,w) := |u\AND v\AND w|$.
+However, as alluded to above, we also are going to ask that further identities hold. 
+For these identities to make sense we need to start with a code with the special property of being \emph{doubly even}.
+
+\begin{definition}
+A code $\cC \subset (\FF_2)^n$ is \emph{doubly even} if for every word $v\in \cC$, $|v|$ is divisible by 4. 
+\end{definition}
+
+
+As an example, the \emph{Hamming (8,4) code} is doubly even, and is given by the subspace of $\FF_2^8$ spanned by the rows of the matrix
+\[
+\begingroup % keep the change local
+\setlength\arraycolsep{2pt}
+\begin{pmatrix}
+1&0&0&0&0&1&1&1\\
+0&1&0&0&1&0&1&1\\
+0&0&1&0&1&1&0&1\\
+0&0&0&1&1&1&1&0
+\end{pmatrix}
+\endgroup
+\]
+
+The inclusion/exclusion formula applied to counting nonzero entries allows us to show that, for all $v$ and $w$ in any doubly even code $\cC$,
+\[
+	|v+w| + |v\AND w| = |v| + |w| - |v\AND w|\,.
+\]
+In other words: $|v\AND w| = \frac12(|v| + |w| - |v+w|)$, which implies that $|v\AND w|$ is divisible by 2.
+Thus for words $v,w$ in a doubly even code, both $\frac14|v|$ and $\frac12|v\AND w|$ are integers.
+
+\begin{definition}[Griess \cite{Griess}]
+Let $\cC$ be a doubly even code. 
+A \emph{code cocycle} $\alpha\colon \cC \times \cC \to \FF_2$ is a  function satisfy the identities
+\begin{align}
+& \alpha(v,w)-\alpha(u+v,w)+\alpha(u,v+w)-\alpha(u,v) =|u\AND v \AND w| \pmod 2 \label{eq: code cocycle 1}\\
+& \alpha(v,w)+\alpha(w,v) = {}  \tfrac12|v\AND w| \pmod 2 \label{eq: code cocycle 2}\\
+& \alpha(v,v) = {}  \tfrac14|v| \pmod 2\label{eq: code cocycle 3}
+\end{align}
+\end{definition}
+
+\begin{remark}
+What we call a code cocycle, Griess actually calls a `factor set', but given the relation to cocycles as in the previous section, we prefer the name that indicates this.
+In particular, a code cocycle is an example of a twisted cocycle.
+\end{remark}
+
+On the face of it, it's not clear that code cocycles even exist, or how many there are for a given doubly even code. 
+However, Griess gave an algorithm that inductively constructs code cocycles, and counts how many arbitrary choices can be made along the way, proving that code cocycles do indeed exist.
+The growth of the number of possible code cocycles with $\dim \cC$ is rather fearsome: $2^{2^k-k-1}$, for $k=\dim \cC$ (\cite[Theorem 10]{Griess}).
+For the 4-dimensional Hamming code given above, this is $512$, but for the extended Golay code below there are $2^{4083}$ possible code cocycles, a number with 1230 digits in base 10.
+
+
+Given a code cocycle, what do we do with it? 
+The idea is to emulate the construction of the dihedral group from a cocycle, except now we do \emph{not} get a group: the failure of the cocycle 
+
+\section{Griess's algorithm and its output.}
+
+The algorithm that Griess gives in \cite[Theorem 10]{Griess} to construct code cocycles for a code $\cC$ takes as input an ordered  basis $\{b_1,\ldots,b_k\}$ for $\cC$. 
+The code cocycle is then built up inductively over larger and larger subspaces $\Span\{b_1,\ldots,b_m\}$, at each stage applying the identities (\ref{eq: code cocycle 1})--(\ref{eq: code cocycle 3}) and consequences of these to define the growing code cocycle on a larger domain.
+
+More accurately, Griess outlines the algorithm, using steps like `determine the cocycle on the subset using identity X'. We have given the steps and equations in full in the boxed Algorithm~\ref{Griess algo}.
+
+% Griess' method starts by choosing a total flag and then choosing a specified new vector in each higher-dimensional subspace, but we have rather chosen to input a basis $\{v_0,\ldots,v_{n-1}\}$, and then generate the flag $V_0 \subset V_1 \subset \cdots \subset V_{n-1} = C$ as $V_i = \Span\{v_0,\ldots,v_i\}$.
+% Ater an initialisation step (D0), the algorithm loops through steps D1-D4 for each subspace $V_1$,\ldots,$V_{n-1}$.
+
+% Here's a sample of the first pass of the algorithm, though we need to check this against the implementation, and it should generalise to $v \in \Span(\text{already considered vectors})$.\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms}}
+
+\begin{algorithm}%[H]
+\SetAlgoLined
+\DontPrintSemicolon
+\KwData{Basis $B = \{b_0,b_1,\ldots,b_{n-1}\}$ for the code $C$}
+\KwResult{Code cocycle $\theta\colon C\times C\to \FF_2$, encoded as a square array of elements from $\FF_2$, with rows and columns indexed by $C$ }
+\;
+\tcp{Initialise} 
+\ForAll{$c_1,c_2 \in C$}{
+$\theta(c_1,c_2) \leftarrow 0$\;
+}
+
+$\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
+\;
+\ForAll{$1\leq k\leq \Length(B)$}{
+	Define $V_k :=\Span\{b_0,\ldots,b_{k-1}\}$\;
+	\tcp{(D1) define theta on \{bk\} x Vk then deduce on Vk x \{bk\}}
+	\ForAll{$v\in V_k$}{
+		\eIf{$v\neq0$}{
+			$\theta(b_k,v) \leftarrow \text{random}$ \tcp*{In practice, random = 0}
+			$\theta(v,b_k) \leftarrow \tfrac12\left|v\And b_k\right|+\theta(b_k,v)$\;
+		}
+		{
+			\tcp{$\theta(b_k,v)$ is already set to 0}
+			$\theta(v,b_k)\leftarrow \tfrac12\left|v\And b_k\right|$\;
+		}
+	}
+	\tcp{(D2) deduce theta on \{bk\} x Wk and Wk x \{bk\}}
+	\ForAll{$v\in V_k$}{
+		$\theta(b_k,b_k\Plus v) \leftarrow \tfrac14\left|b_k\right| + \theta(b_k,v)$\;
+		$\theta(b_k\Plus v,b_k) \leftarrow \tfrac12\left|b_k\And (b_k\Plus v)\right| + \tfrac14\left|b_k\right| + \theta(b_k,v)$\;
+	}
+	\tcp{(D3) deduce theta on Wk x Wk}
+	\ForAll{$v_1\in V_k$}{
+		\ForAll{$v_2\in V_k$}{
+			$w\leftarrow b_k \Plus v_2$\;
+			$a\leftarrow \theta(v_1,b_k)$\;
+			$b\leftarrow \theta(v_1,b_k\Plus w)$\;
+			$c\leftarrow \theta(w,b_k)$\;
+			$r \leftarrow \tfrac12\left|v_1\And w\right| + a + b + c$\;
+			$\theta(w,b_k\Plus v_1) \leftarrow r$
+		}
+	}
+	\tcp{(D4) deduce theta on Wk x Vk and Vk x Wk}
+	\ForAll{$v_1\in V_k$}{
+		\ForAll{$v_2\in V_k$}{
+			$w\leftarrow b_k \Plus v_2$\;
+			$a\leftarrow \theta(w,v_1\Plus w)$\;
+			$\theta(w,v_1) \leftarrow \tfrac14\left|w\right| + a$\;
+			$\theta(v_1,w) \leftarrow \tfrac12\left|v\And w\right| + \tfrac14\left|w\right| + a$\;
+		}
+	}
+}
+\caption{Extracted from Griess's proof of existence of code cocycles}\label{Griess algo}
+\end{algorithm}
+
+We implemented this algorithm in the language Go \cite{RN_GH}, and applied it to the extended Golay code.
+In fact, we looked at the code cocycle that resulted from looking at subspaces of the Golay code, and noticed that for certain subspaces, the code cocycle was a legitimate cocycle, in that it obeyed the cocycle condition---more on this below.
+
+The output of the algorithm is essentially a square table of zeros and ones, much like Figure~\ref{fig:cocycle for q8}, except for the full extended Golay code the table is $4096\times 4096$.
+The rows and columns are labelled by words in the extended Golay code, or rather, by a sorted list of coefficients needed to express the words as linear combinations of our chosen basis.
+However, to visualise this, it is useful to convert bits into pixels, white for 0 and black for 1.
+
+
+\begin{lemma}\label{lemma:formula lemma}
+Let $\cC$ be a doubly even code, $\alpha$ a code cocycle on it, and $\cC = V\oplus W$ a decomposition into complementary subspaces.
+Then for $v_1,v_2\in V$ and $w_1,w_2\in W$,
+\begin{align}\label{eq:theformula}
+	\alpha(v_1\Plus w_1,v_2\Plus w_2)	
+		& := \alpha(v_1,v_2)  + \alpha(w_1,w_2) + \alpha(v_1,w_1) \\
+		&+ \alpha(w_2,v_2) + \alpha(v_1\Plus v_2,w_1\Plus w_2)\\
+							& + \tfrac12|v_2\And(w_1\Plus w_2)| + |v_1\And v_2 \And (w_1\Plus w_2)| \\
+							&+|w_1\And w_2 \And v_2| + \left|v_1\And w_1 \And (v_2 \Plus  w_2)\right| \pmod 2\,.
+\end{align}
+\end{lemma}
+
+\begin{proof}
+sorry.
+\end{proof}
+
+Observe that in Lemma~\ref{lemma:formula lemma}, on the RHS the code cocycle $\alpha$ is only ever evaluated on vectors from the subset $V \cup W \subset \cC$.
+This means that if we throw away all of the array encoding the values of $\alpha$ except those positions with labels coming from $V\cup W$, then we can still reconstruct arbitrary values of $\alpha$ using (\ref{eq:theformula}).
+
+\section{The Golay code and the Parker loop.}
+
+The extended Golay code $\cG$ is a remarkable object (citation for interesting facts; from AMM?), but here we will be content to give a definition. 
+It is the ?unique (up to isomorphism) 12-dimensional doubly-even code
+We shall simply call $\cG$ the `Golay code', since we will not use the 11-dimensional code that is the (unextended) Golay code.
+There is a more-or-less standard basis for $\cG$, but here we shall give a different, very carefully chosen ordered basis.
+And in fact, we shall split the list of basis vectors into two, so as to generate a pair of subspaces to which we will apply Lemma~\ref{lemma:formula lemma}.
+The rows of the left matrix below form the basis for $V$, and the rows of the right matrix below form the basis for $W$.
+
+\[	
+	 \left(\begin{array}{c}
+     000110000000010110100011 \\
+     101001111101101111110001 \\
+     000100000000100100111110 \\
+     010000000010000110101101 \\
+     000000000010010101010111 \\
+     100000000000100111110001
+     \end{array}\right)
+\qquad
+    \left(\begin{array}{c}
+	 101001011100111001111111 \\
+	 100000011100001001001100 \\
+	 000001000000111001001110 \\
+	 100000001000111000111000 \\
+	 100000000100101000010111 \\
+	 011011000001111011111111
+	 \end{array}\right)
+\]
+
+
+% \[ %%%% Not working, not sure why. LaTeX says "Extra alignment tab has been changed to \cr"
+% \begingroup % keep the change local
+% \setlength\arraycolsep{2pt}
+% \begin{pmatrix}
+% 0 & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 1 & 0 & 1 & 0 & 0 & 0 & 1 & 1 \\
+% 1 & 0 & 1 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 1 \\
+% 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 1 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 0 \\
+% 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 1 & 0 & 1 & 0 & 1 & 1 & 0 & 1 \\
+% 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1 \\
+% 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 1
+% \end{pmatrix} 
+% \endgroup
+% \]
+
+% \section{Graphics.}
+
+% Figures for the \textsc{Monthly} can be submitted as either color or black \& white graphics.  Generally, color graphics will be used for the online publication, and converted to black \& white images for the print journal.  We recommend using whatever graphics program you are most comfortable with, so long as the submitted graphic is provided as a separate file using a standard file format.
+
+% For best results, please follow the following guidelines:
+% \begin{enumerate}
+% \item Bitmapped file formats---preferably TIFF or JPEG, but not BMP---are appropriate for photographs, using a resolution of at least 300 dpi at the final scaled size of the image.
+% \item Line art will reproduce best if provided in vector form, preferably EPS.
+% \item Alternatively, both photographs and line art can be provided as PDF files.  Note that creating a PDF does not affect whether the graphic is a bitmap or vector; saving a scanned piece of line art as PDF does not convert it to scalable line art.
+% \item If you generating graphics using a \TeX\ package, please be sure to provide a PDF of the manuscript.  In the production process, \TeX-generated graphics will eventually be converted to more conventional graphics so the \textsc{Monthly} can be delivered in e-reader formats.
+% \item For photos of contributing authors, we prefer photos that are not cropped tight to the author's profile, so that production staff can crop the head shot to an equal height and width.  If possible, avoid photographs that have excess shadows or glare.
+% \end{enumerate}
+
+% \section{Theorems, definitions, proofs, and all that.}
+
+% Following the defaults of the \texttt{amsthm} package, styling is provided for \texttt{theorem}, \texttt{definition}, and \texttt{remark} styles, although the latter two use the same styling.
+
+% \begin{theorem}[Pythagorean Theorem]
+% Theorems, lemmas, axioms, and the like are stylized using italicized text. These environments can be numbered or unnumbered, at the author's discretion.
+% \end{theorem}
+
+% \begin{proof}
+% Proofs set in roman (upright) text, and conclude with an ``end of proof'' (q.e.d.) symbol that is set automatically when you end the proof environment.  When the proof ends with an equation or other non-text element, you need to add \verb~\qedhere~ to the element to set the end of proof symbol; see the \texttt{amsthm} package documentation for more details.
+% \end{proof}
+
+% \begin{definition}[Secant Line]
+% Definitions, remarks, and notation are stylized as roman text.  They are typically unnumbered, but there are no hard-and-fast rules about numbering.
+% \end{definition}
+
+% \begin{remark}
+% Remarks stylize the same as definitions.
+% \end{remark}
+
+
+\begin{acknowledgment}{Acknowledgment.}
+DMR is supported by the Australian Research Council's Discovery Projects scheme, ( project number DP180100383), funded by the Australian Government. \textbf{ADD MORE HERE, IF NEEDED}
+\end{acknowledgment}
+
+\begin{thebibliography}{1}
+
+\bibitem{Conway} John H.\ Conway, A simple construction for the Fischer--Griess monster group \emph{Invent.\ math.} \textbf{79} (1985) 513--540.
+
+\bibitem{Griess} Robert L.\ Griess Jr., Code loops \emph{J.\ Algebra} \textbf{100} (1986) 224--234.
+
+\bibitem{RN_GH} ?David Michael Roberts?? and Ben Nagy, \emph{codeloops}, GitHub repository, (2019) \url{https://github.com/bnagy/codeloops}
+\end{thebibliography}
+
+\begin{biog}
+\item[Ben Nagy] is a student at the University of Adelaide, studying computational linguistics [etc etc]
+\begin{affil}
+University\\
+email
+\end{affil}
+
+\item[David Michael Roberts] is a mathematician specialising in category theory, geometry and a hodge-podge of other random topics.
+\begin{affil}
+School of Mathematical Sciences, The University of Adelaide\\
+david.roberts@adelaide.edu.au
+\end{affil}
+\end{biog}
+\vfill\eject
+
+\end{document}
