@@ -34,4 +34,4 @@ Re-implement BitString, since it is fairly simple stuff and carries no license. 
 
 ## Contributing
 
-Fork and PR, but please don't.
+Fork and PR. Contact paper authors for other queries.

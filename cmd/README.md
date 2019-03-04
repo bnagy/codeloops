@@ -8,9 +8,9 @@ This project did two main things:
 
 The `cmd` contains three utility programs that were used during the research and preparation of the paper.
 
-`alpha` was used to create visualisations of assorted alpha squares.
+`alpha_pics` was used to create visualisations of assorted alpha squares.
 
-`loop` draws the entire Parker loop, using our special basis.
+`loop_pics` draws the entire Parker loop, using our special basis.
 
 `partition` partitions the subspace by recursively choosing two bases of specified lengths and with configurable partitioning criteria. This was the tool that was used to find the 'special' bases for Golay which allowed for the construction of the alpha tables.
 
