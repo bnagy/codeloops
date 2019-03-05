@@ -17,9 +17,11 @@
 \theoremstyle{definition}
 \newtheorem*{definition}{Definition}
 \newtheorem*{remark}{Remark}
+\newtheorem{example}{Example}
 
 \def \cC {\mathcal{C}}
 \def \cG {\mathcal{G}}
+\def \cP {\mathcal{P}}
 \def \FF {\mathbb{F}}
 \newcommand{\AND}{\mathbin{\texttt{\&}}}
 \DeclareMathOperator{\im}{im}
@@ -53,10 +55,11 @@ The first published example of a code loop appeared as a step in John Conway's c
 The code loop Conway used originally appeared in an unpublished manuscript by Richard Parker.
 A general study of code loops was then made by Robert Griess \cite{Griess}.
 Griess also proved the existence of code loops by an algorithmic construction, starting from a particular type of code.
+More recent approaches will be discussed below.
 
 Recall that the elements (or \emph{words}) in a code $\cC$, being vectors, can be combined by addition---this is a group operation and hence associative. 
 The elements of a code loop consist of a pair: a code word and one extra bit.
-The extra bit \emph{twists} the addition so that combination of code loop elements is a \emph{non-associative operation}: $(ab)c\not=a(bc)$.
+The extra bit \emph{twists} the addition so that combination of code loop elements is a \emph{non-associative operation}: $(xy)z\not=x(yz)$.
 
 More specifically, while addition of words in a code is performed by co\"ordinatewise addition in $\FF_2$---bitwise XOR---the algebraic operation in a code loop is not so easily described.
 The code loop operation can be reconstructed from a function $\cC \times \cC \to \FF_2$ satisfying certain identities, called a \emph{twisted cocycle}.
@@ -92,12 +95,12 @@ It is a nice exercise to see that $s(v)s(w)s(v+w)^{-1}$ is always $\pm 1$, so th
 % \medskip
 \begin{center}
 \begin{tabular*}{0.35\textwidth}{c|cccc}
-$v\setminus w$&00&10&01&11\\
+$v\setminus w$&$00$&$10$&$01$&$11$\\
 \hline
-	00		& 0& 0& 0& 0\\
-	10		& 0& 1& 1& 0\\
-	01		& 0& 0& 1& 1\\
-	11		& 0& 1& 0& 1\\
+	$00$		& $0$& $0$& $0$& $0$\\
+	$10$		& $0$& $1$& $1$& $0$\\
+	$01$		& $0$& $0$& $1$& $1$\\
+	$11$		& $0$& $1$& $0$& $1$\\
 \end{tabular*}
 \end{center}
 where $00=(0,1)$, $10=(1,0)$ etc.
@@ -135,7 +138,7 @@ An alternative visualisation is given in Figure~\ref{fig:cocycle for q8}.
 \begin{center}
 \includegraphics[height=2.5cm]{quaternion_cocyc} %%% Want this to be a pdf image, not png
 \end{center}
-\caption{Alternative presentation for the values of the cocycle $d\colon V\times V\to \FF_2$, with white = 0, black = 1.}
+\caption{A $4\times4$ array giving the values of the cocycle $d\colon V\times V\to \FF_2$, with white = $0$, black = $1$.}
 \label{fig:cocycle for q8}
 \end{figure}
 
@@ -155,7 +158,7 @@ Finally, $\phi$ can be checked to be a homomorphism for the group operation on $
 Thus we can reconstruct, at least up to isomorphism, the nonabelian group $Q_8$ from the two abelian groups $V$ and $\FF_2$, together with the \emph{cocycle} $d\colon V\times V\to \FF_2$.
 A table of the values of $d$ is shown in Figure~\ref{fig:cocycle for q8}, where $00=(0,0)$, $10 = (1,0)$ etc.
 If we didn't know about the group structure of $Q_8$ already we could construct it from scratch using $d$.
-This is what we aim to do below for the Parker loop, using a similar approach.
+This is what we aim to do to construct the Parker loop, using a similar approach.
 
 
 \section{Twisted cocycles and loops.}
@@ -172,31 +175,51 @@ for a special \emph{twisting function} $f\colon V\times V\times V \to \FF_2$. We
 \]
 We denote $\FF \times V$ equipped with this binary operation by $\FF\times_\alpha V$.
 
-Recall that a \emph{loop} is a set $L$ with a binary operation $\star\colon L\times L \to L$, a unit element $e\in L$ such that $e\star x = x \star e = x$ for all $x\in L$, and such that the functions $(-)\star z \colon L \to L$ and $z\star (-) \colon L \to L$ are bijections for every $z\in L$. Informally, this means that every element $z\in L$ has a left inverse and a right inverse for $\star$, and these are unique---but may be different in general. The following is a cute exercise is using the twisting function and the assumption on $\alpha(0,v)$ and $\alpha(v,0)$ stated in the previous paragraph.
+Recall that a \emph{loop} is a set $L$ with a binary operation $\star\colon L\times L \to L$, a unit element $e\in L$ such that $e\star x = x \star e = x$ for all $x\in L$, and such that the functions $(-)\star z \colon L \to L$ and $z\star (-) \colon L \to L$ are bijections for every $z\in L$. 
+Informally, this means that every element $z\in L$ has a left inverse and a right inverse for $\star$, and these are unique---but may be different in general. 
+The following is a cute exercise is using the twisting function and the assumption on $\alpha(0,v)$ and $\alpha(v,0)$ stated in the previous paragraph.
 
 \begin{lemma}
-The operation $\ast_\alpha$ makes $\FF\times_\alpha V$ into a loop, with identity element $(0,0)$.
+The operation $\ast_\alpha$ makes $\FF\times_\alpha V$ into a loop, with identity element $(0,\underline{0})$, for $\underline{0}$ the zero vector in $V$.
 \end{lemma}
 
-Groups are examples of loops, but they are in a sense the uninteresting case. Arbitrary loops are quite badly behaved: their product is non-associative in general. But there is a special non-associative case, introduced by Ruth Moufang \cite{Moufang}, where one has better algebraic properties.
+Groups are examples of loops, but they are in a sense the uninteresting case. 
+Arbitrary loops are quite badly behaved: their product is non-associative in general. 
+But there is a special non-associative case, introduced by Ruth Moufang \cite{Moufang}, where one has better algebraic properties.
 
 \begin{definition}
 A \emph{Moufang loop} is a loop $(L,\star)$ satisfying the identity $x \star (y \star (x \star z)) = ((x \star y) \star x) \star z$ for all choices of elements $x,y,z\in L$.
 \end{definition}
 
-The most famous example of a Moufang loop is probably the non-zero octonions $\mathbb{O}^\times$ under multiplication. A key property of a Moufang loop $L$ is that any subloop $\langle x,y\rangle < L$ generated by a pair of elements $x,y$ is in fact a group. As a corollary, powers of a \emph{single} element are well-defined, and do not require extra bracketing: $x\star (x \star x) = (x\star x) \star x =: x^3$, for example. Additionally, the left and right inverses \emph{always} agree in a Moufang loop, so that for each $x\in L$, there is a unique $x^{-1}$ such that $x\star x^{-1} = x^{-1}\star x = e$. Importantly for us, code loops, defined below as a special case of the construction of $\FF\times_\alpha V$, turn out to be Moufang.
+The most famous example of a Moufang loop is probably the non-zero octonions $\mathbb{O}^\times$ under multiplication. 
+A key property of a Moufang loop $L$ is that any subloop $\langle x,y\rangle < L$ generated by a pair of elements $x,y$ is in fact a group. 
+As a corollary, powers of a \emph{single} element are well-defined, and do not require extra bracketing: $x\star (x \star x) = (x\star x) \star x =: x^3$, for example. 
+Additionally, the left and right inverses \emph{always} agree in a Moufang loop, so that for each $x\in L$, there is a unique $x^{-1}$ such that $x\star x^{-1} = x^{-1}\star x = e$. 
+Importantly for us, code loops, defined below as a special case of the construction of $\FF\times_\alpha V$, turn out to be Moufang.
 
+\begin{example}\label{example:m16}
+The finite Moufang loop $M := M_{16}(C_2\times C_4)$ of \cite{} (classification paper, ?Moufang Loops of Small Order. I?), with 16 elements, is an extension $\FF_2 \to M \to V=\FF_2^3$ arising from a twisted cocycle $V\times V\to \FF_2$ given by the $8\times 8$ array
+\medskip
+\begin{center}
+\includegraphics[width=0.25\textwidth]{m16.png}
+\end{center}
+where again, white = $0$, black = $1$. The order of the row/colum labels is $000$, $100$, $010$, $110$, $001$, $101$, $011$, $111$. 
+Notice in particular that the first four columns/rows correspond to the subspace $U\subset V$ spanned by $10$ and $01$, and that the restriction $U\times U \to \FF_2$ is identically zero (i.e.\ white). 
+This means that the restriction of $M$ to the subspace $U$---the subloop of elements that map to elements of $U$---is in fact the direct product $\FF_2\times U$, and in particular a group.
+\end{example}
 
 
 \section{Codes and code loops.}
 
 To describe the twisting function $f$ for our code loops, we need to know about some extra operations that exist on vector spaces over the field $\FF_2$. 
-For $W=(\FF_2)^n$ a vector space over $\FF_2$ and vectors $v,w\in W$, there is a new vector $v\AND w \in W$ given by
+For $W$ an $n$-dimensional vector space over $\FF_2$ and vectors $v,w\in W$, there is a new vector $v\AND w \in W$ given by
 \[
-	v\AND w := (v_1w_1,v_2w_2,\ldots,v_nw_n).
+	v\AND w := (v_1w_1,\,v_2w_2,\,\ldots,\,v_nw_n).
 \]
-Note that if we take a code $\cC \subset (\FF_2)^n$, then we aren't guaranteed that $\cC$ is closed under this operation.
-The other operation takes a vector $v\in W$ and returns the sum, as an integer, of its entries: $|v| := v_1 + \cdots + v_n$. Equivalently, it is the number of nonzero entries in $v$.
+If we think of such vectors as binary words, then this is bitwise AND.
+Note that if we take a code $\cC \subset (\FF_2)^n$, then $\cC$ is not guaranteed to be closed under this operation.
+The other operation takes a vector $v\in W$ and returns its \emph{weight}: the sum, as an integer, of its entries: $|v| := v_1 + \cdots + v_n$. 
+Equivalently, it is the number of nonzero entries in $v$.
 
 The desired twisting function is a combination of these two, namely $f(u,v,w) := |u\AND v\AND w|$.
 However, as alluded to above, we also are going to ask that further identities hold. 
@@ -207,7 +230,8 @@ A code $\cC \subset (\FF_2)^n$ is \emph{doubly even} if for every word $v\in \cC
 \end{definition}
 
 
-As an example, the \emph{Hamming (8,4) code} is doubly even, and is given by the subspace of $\FF_2^8$ spanned by the rows of the matrix
+\begin{example}\label{example:Hamming}
+The \emph{Hamming (8,4) code} is doubly even, and is given by the subspace of $\FF_2^8$ spanned by the rows of the matrix
 \[
 \begingroup % keep the change local
 \setlength\arraycolsep{2pt}
@@ -219,6 +243,34 @@ As an example, the \emph{Hamming (8,4) code} is doubly even, and is given by the
 \end{pmatrix}
 \endgroup
 \]
+\end{example}
+
+A more substantial example is given by the Golay code.
+
+\begin{example}\label{example:Golay}
+The Golay code $\cG \subset \FF_2^{24}$ is the span of the 12 rows in the following two matrices
+\[	
+	 \left(\begin{array}{c}
+     000110000000010110100011 \\
+     101001111101101111110001 \\
+     000100000000100100111110 \\
+     010000000010000110101101 \\
+     000000000010010101010111 \\
+     100000000000100111110001
+     \end{array}\right)
+\qquad
+    \left(\begin{array}{c}
+	 101001011100111001111111 \\
+	 100000011100001001001100 \\
+	 000001000000111001001110 \\
+	 100000001000111000111000 \\
+	 100000000100101000010111 \\
+	 011011000001111011111111
+	 \end{array}\right)
+\]
+This is a different basis from the usual one \cite{Thompson}, which can be built using the complement of the incidence matrix of the icosahedron. 
+This basis, however, allows us to demonstrate some interesting properties below.
+\end{example}
 
 The inclusion/exclusion formula applied to counting nonzero entries allows us to show that, for all $v$ and $w$ in any doubly even code $\cC$,
 \[
@@ -238,25 +290,22 @@ A \emph{code cocycle} $\alpha\colon \cC \times \cC \to \FF_2$ is a  function sat
 \end{definition}
 
 \begin{remark}
-What we call a code cocycle, Griess actually calls a `factor set', but given the relation to cocycles as in the previous section, we prefer the name that indicates this.
-In particular, a code cocycle is an example of a twisted cocycle, with twisting function $f(u,v,w)=|u\AND v \AND w|$.
+What we call a code cocycle, Griess actually calls a `factor set'. Given that a code cocycle is an example of a twisted cocycle, we prefer a name that indicates this.
 \end{remark}
 
-On the face of it, it's not clear that code cocycles even exist, or how many there are for a given doubly even code. 
-However, Griess gave an algorithm that inductively constructs code cocycles, and counts how many arbitrary choices can be made along the way, proving that code cocycles do indeed exist.
+It is not obvious, on first consideration, that code cocycles even exist, or how many there are for a given doubly even code. 
+However, Griess gave an proof that inductively constructs code cocycles, and counts how many arbitrary choices can be made along the way, proving that code cocycles do indeed exist.
 The growth of the number of possible code cocycles with $\dim \cC$ is rather fearsome: $2^{2^k-k-1}$, for $k=\dim \cC$ (\cite[Theorem 10]{Griess}).
-For the 4-dimensional Hamming code given above, this is $512$, but for the extended Golay code below there are $2^{4083}$ possible code cocycles, a number with 1230 digits in base 10.
+For the 4-dimensional Hamming code given above, this is $512$, but for the extended Golay code below there are $2^{4083}$ possible code cocycles, a number with $1230$ digits in base $10$.
 
 
-Given a code cocycle, what do we do with it? 
-The idea is to emulate the construction of the dihedral group from a cocycle, except now we do \emph{not} get a group: the failure of the cocycle 
 
 \section{Griess's algorithm and its output.}
 
 The algorithm that Griess gives in \cite[Theorem 10]{Griess} to construct code cocycles for a code $\cC$ takes as input an ordered  basis $\{b_1,\ldots,b_k\}$ for $\cC$. 
 The code cocycle is then built up inductively over larger and larger subspaces $\Span\{b_1,\ldots,b_m\}$, at each stage applying the identities to define the growing code cocycle on a larger domain.
 
-More accurately, Griess outlines the algorithm, using steps like `determine the cocycle on such-and-such subset using identity X', where X refers to one of (\ref{eq: code cocycle 1}), (\ref{eq: code cocycle 2}), (\ref{eq: code cocycle 3}), or corollaries of these. We have given the steps and equations in full in the boxed Algorithm~\ref{Griess algo}.
+More accurately, Griess outlines the algorithm, using steps like `determine the cocycle on such-and-such subset using identity X', where X refers to one of (\ref{eq: code cocycle 1}), (\ref{eq: code cocycle 2}), (\ref{eq: code cocycle 3}), or corollaries of these. We have reconstructed the process in detail in Algorithm~\ref{Griess algo}.
 
 % Griess' method starts by choosing a total flag and then choosing a specified new vector in each higher-dimensional subspace, but we have rather chosen to input a basis $\{v_0,\ldots,v_{n-1}\}$, and then generate the flag $V_0 \subset V_1 \subset \cdots \subset V_{n-1} = C$ as $V_i = \Span\{v_0,\ldots,v_i\}$.
 % Ater an initialisation step (D0), the algorithm loops through steps D1-D4 for each subspace $V_1$,\ldots,$V_{n-1}$.
@@ -318,13 +367,13 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 }
 \end{algorithm}
 
-We implemented this algorithm in the language Go \cite{RN_GH}, and applied it to the extended Golay code.
-In fact, we looked at the code cocycle that resulted from looking at various subspaces of the Golay code, and noticed that for certain subspaces, the code cocycle was a \emph{actual cocycle}, in that it obeyed the cocycle condition---more on this below.
+We implemented Algorithm~\ref{Griess algo} in the language Go \cite{RN_GH}, as well as diagnostic tools, for instance for veryifying the result is Moufang.
+% In fact, we looked at the code cocycle that resulted from looking at various subspaces of the Golay code, and noticed that for certain subspaces, the code cocycle was a \emph{actual cocycle}, in that it obeyed the cocycle condition---more on this below.
+The output of the algorithm is a matrix of zeroes and ones with rows and columns labelled by words in the Golay code, and can be displayed as an array of black and white pixels. The pixel colours correspond to ones and zeroes, as in Example~\ref{example:m16}; for the Golay code the image looks like 16 million pixels (more accurately, $4096\times 4096$) of almost random noise.
 
-The output of the algorithm is essentially a square table of zeros and ones, much like Figure~\ref{fig:cocycle for q8}, except for the full extended Golay code the table is $4096\times 4096$.
-The rows and columns are labelled by words in the extended Golay code, or rather, by a sorted list of coefficients needed to express the words as linear combinations of our chosen basis.
-However, to visualise this, it is useful to convert bits into pixels, white for 0 and black for 1.
-
+As a combinatorial object, the code cocycle $\theta\colon \cC \times \cG\to \FF_2$ constructed from Algorithm~\ref{Griess algo} using the basis in Example~\ref{example:Golay} is too large and unwieldy to examine for any interesting structure. 
+Moreover, to define with the Parker loop $\cP := \FF_2\times_\theta \cG$ one needs to know all 16 million or so values of $\theta$.
+Thus, if one could reconstruct $\theta$ by a method shorter than just running Algorithm~\ref{Griess algo}, then one is ahead of the game. 
 
 \begin{lemma}\label{lemma:formula lemma}
 Let $\cC$ be a doubly even code, $\alpha$ a code cocycle on it, and $\cC = V\oplus W$ a decomposition into complementary subspaces.
@@ -344,34 +393,56 @@ sorry.
 
 Observe that in Lemma~\ref{lemma:formula lemma}, on the RHS the code cocycle $\alpha$ is only ever evaluated on vectors from the subset $V \cup W \subset \cC$.
 This means that if we throw away all of the array encoding the values of $\alpha$ except those positions with labels coming from $V\cup W$, then we can still reconstruct arbitrary values of $\alpha$ using (\ref{eq:theformula}).
+If we assume that $\cC$ is $2k$-dimensional, and that $V$ and $W$ are both $k$-dimensional, then the domain of the restricted $\alpha$ has $(2^k+2^k - 1)^2 = 2^{2(k+1)} - 2^{k+2} + 1 = O((2^k)^2)$ elements. 
+Compare this to the full domain of $\alpha$, which has $2^{2k}\times 2^{2k} = (2^k)^4$ elements, giving a roughly square-root saving.
 
-\section{The Golay code and the Parker loop.}
+And, now it should be clear why the Golay code basis in Example~\ref{example:Golay} was partitioned into two lists of six vectors: we can reconstruct $\theta$, and hence the Parker loop multiplication, from a mere $2^{14} - 2^8 + 1 = 16,129$ values.
+The span of the rows of the left matrix in Example~\ref{example:Golay} give the subspace $V\subset \cG$, and the span of the rows of the right matrix give $W\subset \cG$.
 
-The extended Golay code $\cG$ is a remarkable object \cite{Thompson}, but here we will be content to give a definition. 
-We shall simply call $\cG$ the `Golay code', since we will not use the 11-dimensional code that is the (unextended) Golay code.
-There is a more-or-less standard basis for $\cG$---using the complement of the adjacency matrix of the icosahedron---but here we shall give a different, very carefully chosen ordered basis.
-And in fact, we shall split the list of basis vectors into two, so as to generate a pair of subspaces $V,W\subset \cG$ to which we will apply Lemma~\ref{lemma:formula lemma}.
-The rows of the left matrix below form the basis for $V$, and the rows of the right matrix below form the basis for $W$.
+In practice, we double count slightly when displaying the values of the restricted code cocycle, and use the \emph{disjoint} union $V \sqcup W$, rather than $V\cup W$, to label the colums and rows of the resulting array.
+The top left quadrant then contains to the restriction of $\alpha$ to $V\times V$, and the bottom right quadrant the restriction to $W\times W$. 
+The off-diagonal quadrants contain the values of $\alpha$ restricted to $V\times W$ and $W\times V$.
 
-\[	
-	 \left(\begin{array}{c}
-     000110000000010110100011 \\
-     101001111101101111110001 \\
-     000100000000100100111110 \\
-     010000000010000110101101 \\
-     000000000010010101010111 \\
-     100000000000100111110001
-     \end{array}\right)
-\qquad
-    \left(\begin{array}{c}
-	 101001011100111001111111 \\
-	 100000011100001001001100 \\
-	 000001000000111001001110 \\
-	 100000001000111000111000 \\
-	 100000000100101000010111 \\
-	 011011000001111011111111
-	 \end{array}\right)
-\]
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.8\textwidth]{alpha_awesum.png}
+\end{center}
+\caption{The restriction of the Parker loop code cocycle $\theta$ to $(V\sqcup W)^2$}
+\end{figure}
+
+Remarkably, the restriction of the Parker loop $\cP$ to $V\subset \cG$ reduces to a direct product: $\theta\big|_{V\times V}$ is identically zero! Moreover, the restriction of $\cP$ to $W$ is the direct product $\FF_2^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
+
+% \section{The Golay code and the Parker loop.}
+
+% The extended Golay code $\cG$ is a remarkable object \cite{Thompson}, but here we will be content to give a definition. 
+% We shall simply call $\cG$ the `Golay code', since we will not use the 11-dimensional code that is the (unextended) Golay code.
+% There is a more-or-less standard basis for $\cG$---using the complement of the adjacency matrix of the icosahedron---but here we shall give a different, very carefully chosen ordered basis.
+% And in fact, we shall split the list of basis vectors into two, so as to generate a pair of subspaces $V,W\subset \cG$ to which we will apply Lemma~\ref{lemma:formula lemma}.
+% The rows of the left matrix below form the basis for $V$, and the rows of the right matrix below form the basis for $W$.
+
+% \[	
+% 	 \left(\begin{array}{c}
+%      000110000000010110100011 \\
+%      101001111101101111110001 \\
+%      000100000000100100111110 \\
+%      010000000010000110101101 \\
+%      000000000010010101010111 \\
+%      100000000000100111110001
+%      \end{array}\right)
+% \qquad
+%     \left(\begin{array}{c}
+% 	 101001011100111001111111 \\
+% 	 100000011100001001001100 \\
+% 	 000001000000111001001110 \\
+% 	 100000001000111000111000 \\
+% 	 100000000100101000010111 \\
+% 	 011011000001111011111111
+% 	 \end{array}\right)
+% \]
+
+
+
+
 
 
 % \[ %%%% Not working, not sure why. LaTeX says "Extra alignment tab has been changed to \cr"
