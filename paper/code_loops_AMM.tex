@@ -48,7 +48,7 @@ The theory of codes makes for a fascinating study.
 At their heart, codes are `merely' subspaces of vector spaces over some small finite field, with certain combinatorial properties.
 Why do such things exist? Like a lot of exceptional objects in combinatorics, it can come down to: ``because''.
 This makes constructing codes sometimes more of an art than something systematic.
-In this paper, we are going to consider the construction of certain [algebro-combinatoric] structures closely related to codes, called \emph{code loops}. 
+In this paper, we are going to consider the construction of certain structures closely related to codes, called \emph{code loops}. 
 We will also only be considering the case where the base field is $\FF_2=\{0,1\}$, and refer to its elements as \emph{bits}.
 
 The first published example of a code loop appeared as a step in John Conway's construction of the Monster sporadic simple group \cite{Conway}. 
@@ -77,17 +77,17 @@ The elements of $Q_8$ satisfy the identities
 \[
 	i^2 = j^2 = k^2 = -1, \quad ij=k.
 \]
-There is a surjective group homomorphism $\pi\colon Q_8 \to \FF_2 \times \FF_2 =: V$, sending $i$ to $(1,0)$ and $j$ to $(0,1)$, and the kernel of $\pi$ is the subgroup $\{1,-1\}\simeq \FF_2$.
+There is a surjective group homomorphism $\pi\colon Q_8 \to \FF_2 \times \FF_2 = V_4$, sending $i$ to $(1,0)$ and $j$ to $(0,1)$, and the kernel of $\pi$ is the subgroup $\{1,-1\}\simeq \FF_2$.
 Moreover, this kernel is the \emph{center} of $Q_8$, the set of all elements that commute with every other element of the group.
 
-Now $Q_8$ is a nonabelian group, but both $\FF_2$ and $V$ are abelian groups.
+Now $Q_8$ is a nonabelian group, but both $\FF_2$ and $V_4$ are abelian groups.
 One might think that it shouldn't be possible to reconstruct $Q_8$ from the latter two groups, but it is! 
 That is, if we are given some extra information that uses only the two abelian groups.
-There is an obvious function $s\colon V \to Q_8$, sending $(0,0)$ to $1$, $(1,0)$ to $i$, $(0,1)$ to $j$ and $(1,1)$ to $k$.
+There is an obvious function $s\colon V_4 \to Q_8$, sending $(0,0)$ to $1$, $(1,0)$ to $i$, $(0,1)$ to $j$ and $(1,1)$ to $k$.
 This almost looks like a group homomorphism, but it is not, as $(1,0) + (1,0) = (0,0)$ in $V$, but $i^2 \not= 1$ in $Q_8$.
 We can measure the failure of $s$ to be a group homomorphism by considering the two-variable function
 \[
-	d\colon V \times V \to \FF_2
+	d\colon V_4 \times V_4 \to \FF_2
 \]
 defined by $ (-1)^{d(v,w)} = s(v)s(w)s(v+w)^{-1}$. 
 It is a nice exercise to see that $s(v)s(w)s(v+w)^{-1}$ is always $\pm 1$, so that this definition makes sense. The values of $d(v,w)$ are given as:
@@ -109,7 +109,7 @@ One can check that $d$ satisfies the \emph{cocycle identities}:
 \[
 	d(v,w)-d(u+v,w)+d(u,v+w)-d(u,v) = 0
 \]
-for all triples $u,v,w\in V$. It is also immediate from the definition that $d(0,0)=0$.
+for all triples $u,v,w\in V_4$. It is also immediate from the definition that $d(0,0)=0$.
 An alternative visualisation is given in Figure~\ref{fig:cocycle for q8}.
 
 \begin{figure}[!b]
@@ -138,32 +138,32 @@ An alternative visualisation is given in Figure~\ref{fig:cocycle for q8}.
 \begin{center}
 \includegraphics[height=2.5cm]{quaternion_cocyc} %%% Want this to be a pdf image, not png
 \end{center}
-\caption{A $4\times4$ array giving the values of the cocycle $d\colon V\times V\to \FF_2$, with white = $0$, black = $1$.}
+\caption{A $4\times4$ array giving the values of the cocycle $d\colon V_4\times V_4\to \FF_2$, with white = $0$, black = $1$.}
 \label{fig:cocycle for q8}
 \end{figure}
 
 
 The reason for this somewhat mysterious construction is that we can build a bijection of sets using $s$ and the isomorphism $\FF_2\simeq \{1,-1\}$, namely
 \[
-	\FF_2\times V \simeq \left(\{1\}\times V\right) \cup \left(\{-1\} \times V\right) \stackrel{\phi}{\longrightarrow}
+	\FF_2\times V_4 \simeq \left(\{1\}\times V_4\right) \cup \left(\{-1\} \times V_4\right) \stackrel{\phi}{\longrightarrow}
 	\{1,\, i,\, j,\, k\}\cup \{-1,\, -i,\, -j,\, -k\} = Q_8
 \]
-If we define a new product operation on the \emph{set} $\FF_2\times V$ by
+If we define a new product operation on the underlying \emph{set} of $\FF_2\times V_4$ by
 \[
 	(s,v)\ast_d(t,w):=(s+ t+ d(v,w),v+w),
 \]
 then the cocycle identities ensure that this is in fact associative and further, a group operation.
 Finally, $\phi$ can be checked to be a homomorphism for the group operation on $Q_8$ and for $\ast_d$, hence is a group isomorphism.
 
-Thus we can reconstruct, at least up to isomorphism, the nonabelian group $Q_8$ from the two abelian groups $V$ and $\FF_2$, together with the \emph{cocycle} $d\colon V\times V\to \FF_2$.
-A table of the values of $d$ is shown in Figure~\ref{fig:cocycle for q8}, where $00=(0,0)$, $10 = (1,0)$ etc.
+Thus we can reconstruct, at least up to isomorphism, the nonabelian group $Q_8$ from the two abelian groups $V_4$ and $\FF_2$, together with the \emph{cocycle} $d\colon V_4\times V_4\to \FF_2$.
+% A table of the values of $d$ is shown in Figure~\ref{fig:cocycle for q8}, where $00=(0,0)$, $10 = (1,0)$ etc.
 If we didn't know about the group structure of $Q_8$ already we could construct it from scratch using $d$.
 This is what we aim to do to construct the Parker loop, using a similar approach.
 
 
 \section{Twisted cocycles and loops.}
 
-The construction in the previous section is a fairly typical case of reconstructing a central extension from a cocycle (although in general one does not even need the analogue of the group $V$ to be abelian). 
+The construction in the previous section is a fairly typical case of reconstructing a central extension from a cocycle (although in general one does not even need the analogue of the group $V_4$ to be abelian). 
 However, we wish to go one step further, and construct a structure with a \emph{non-associative} product from a pair of abelian groups: the group $\FF_2$ and a vector space $V$.
 Instead of a cocycle, we use a \emph{twisted cocycle}: a function $\alpha\colon V\times V \to \FF_2$ like $d$ that instead satisfies
 \[
@@ -173,14 +173,14 @@ for a special \emph{twisting function} $f\colon V\times V\times V \to \FF_2$. We
 \[
 	(s,v)\ast_\alpha(t,w):=(s+ t+ \alpha(v,w),v+w).
 \]
-We denote $\FF \times V$ equipped with this binary operation by $\FF\times_\alpha V$.
+We denote $\FF \times V$ equipped with this binary operation by $\FF_2\times_\alpha V$.
 
 Recall that a \emph{loop} is a set $L$ with a binary operation $\star\colon L\times L \to L$, a unit element $e\in L$ such that $e\star x = x \star e = x$ for all $x\in L$, and such that the functions $(-)\star z \colon L \to L$ and $z\star (-) \colon L \to L$ are bijections for every $z\in L$. 
 Informally, this means that every element $z\in L$ has a left inverse and a right inverse for $\star$, and these are unique---but may be different in general. 
-The following is a cute exercise is using the twisting function and the assumption on $\alpha(0,v)$ and $\alpha(v,0)$ stated in the previous paragraph.
+The following is a cute exercise is using the twisting function and the assumption that $\alpha(0,v)=\alpha(v,0)=0$.
 
 \begin{lemma}
-The operation $\ast_\alpha$ makes $\FF\times_\alpha V$ into a loop, with identity element $(0,\underline{0})$, for $\underline{0}$ the zero vector in $V$.
+The operation $\ast_\alpha$ makes $\FF_2\times_\alpha V$ into a loop, with identity element $(0,\underline{0})$, for $\underline{0}$ the zero vector in $V$.
 \end{lemma}
 
 Groups are examples of loops, but they are in a sense the uninteresting case. 
