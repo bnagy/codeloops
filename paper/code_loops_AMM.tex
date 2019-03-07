@@ -406,10 +406,10 @@ Then for $v_1,v_2\in V$ and $w_1,w_2\in W$,
 \end{lemma}
 
 \begin{proof}
-We apply the identity (\ref{eq: code cocycle 1}) twice and the identity (\ref{eq: code cocycle 2}) once:
+We apply the identity (\ref{eq: code cocycle 1}) three times and then the identity (\ref{eq: code cocycle 2}) once:
 \begin{align*}
 \begin{split}
-	\theta(v_1+w_1,v_2+w_2) =&\ \theta(v_1,w_1) + \theta(v_1,v_2+(w_1+w_2)) + \theta(w_1,v_2+w_2) \\
+	\theta(v_1+w_1,v_2+w_2) =&\ \theta(v_1,w_1) + \theta(v_1,v_2+w_1+w_2) + \theta(w_1,v_2+w_2) \\
 	&+ |v_1\AND w_1\AND(v_2+w_2)| 
 \end{split}\\
 \begin{split}
