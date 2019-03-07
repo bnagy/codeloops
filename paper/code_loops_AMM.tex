@@ -257,7 +257,7 @@ and is doubly even.
 A more substantial example is given by the Golay code.
 
 \begin{example}\label{example:Golay}
-The Golay code $\cG \subset (\FF_2)^{24}$ is the span of the following vectors:
+The Golay code $\cG \subset (\FF_2)^{24}$ is the span of the following (row) vectors:
 \[	
 	 \begin{array}{c}
      000110000000010110100011 \\
@@ -321,7 +321,8 @@ However, the description by Griess is more of an outline, using steps like `dete
 
 % Here's a sample of the first pass of the algorithm, though we need to check this against the implementation, and it should generalise to $v \in \Span(\text{already considered vectors})$.\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms}}
 
-\begin{algorithm}%[H]
+\begin{algorithm}[b]
+\small
 \caption{Reverse engineered from proof of \cite[Theorem 10]{Griess}.}\label{Griess algo}
 \SetAlgoLined
 \DontPrintSemicolon
@@ -370,7 +371,7 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 			$w\leftarrow b_i \Plus v_2$\;
 			$a\leftarrow \theta(w,v_1\Plus w)$\;
 			$\theta(w,v_1) \leftarrow \tfrac14\left|w\right| + a$\;
-			$\theta(v_1,w) \leftarrow \tfrac12\left|v\And w\right| + \tfrac14\left|w\right| + a$\;
+			$\theta(v_1,w) \leftarrow \tfrac12\left|v_1\And w\right| + \tfrac14\left|w\right| + a$\;
 		}
 	}
 }
@@ -390,7 +391,7 @@ Let $\cC$ be a doubly even code, $\theta$ a code cocycle on it, and $\cC = V\opl
 Then for $v_1,v_2\in V$ and $w_1,w_2\in W$,
 \begin{align}\label{eq:theformula}
 	\theta(v_1\Plus w_1,v_2\Plus w_2)	
-		& := \theta(v_1,v_2)  + \theta(w_1,w_2) + \theta(v_1,w_1)  \\
+		& = \theta(v_1,v_2)  + \theta(w_1,w_2) + \theta(v_1,w_1) \\
 		&+ \theta(w_2,v_2) + \theta(v_1\Plus v_2,w_1\Plus w_2) \nonumber \\
 							& + \tfrac12|v_2\And(w_1\Plus w_2)| + |v_1\And v_2 \And (w_1\Plus w_2)| \nonumber \\
 							&+|w_1\And w_2 \And v_2| + \left|v_1\And w_1 \And (v_2 \Plus  w_2)\right| \pmod 2\,. \nonumber
@@ -401,27 +402,28 @@ Then for $v_1,v_2\in V$ and $w_1,w_2\in W$,
 sorry.
 \end{proof}
 
-Observe that in Lemma~\ref{lemma:formula lemma}, on the RHS the code cocycle $\theta$ is only ever evaluated on vectors from the subset $V \cup W \subset \cC$.
+Observe that in Lemma~\ref{lemma:formula lemma}, on the right hand side of (\ref{eq:theformula}), the code cocycle $\theta$ is only ever evaluated on vectors from the subset $V \cup W \subset \cC$.
 This means that if we throw away all of the array encoding the values of $\theta$ except those positions with labels coming from $V\cup W$, then we can still reconstruct arbitrary values of $\theta$ using (\ref{eq:theformula}).
 If we assume that $\cC$ is $2k$-dimensional, and that $V$ and $W$ are both $k$-dimensional, then the domain of the restricted $\theta$ has $(2^k+2^k - 1)^2 = 2^{2(k+1)} - 2^{k+2} + 1 = O((2^k)^2)$ elements. 
 Compare this to the full domain of $\theta$, which has $2^{2k}\times 2^{2k} = (2^k)^4$ elements, giving a roughly square-root saving.
 
-And, now it should be clear why the Golay code basis in Example~\ref{example:Golay} was partitioned into two lists of six vectors: we can reconstruct all $16,777,216$ values of $\theta$, and hence the Parker loop multiplication, from a mere $2^{14} - 2^8 + 1 = 16,129$ values.
-The span of the rows of the left column in Example~\ref{example:Golay} give the subspace $V\subset \cG$, and the span of the rows of the right column give $W\subset \cG$.
+And, now it should be clear why the Golay code basis in Example~\ref{example:Golay} was partitioned into two lists of six vectors: we can reconstruct all $16,777,216$ values of the resulting code cycle $\theta$, and hence the Parker loop multiplication, from a mere $2^{14} - 2^8 + 1 = 16,129$ values.
+The span of the left column of vectors in Example~\ref{example:Golay} is the subspace $V\subset \cG$, and the span of the right column of vectors is $W\subset \cG$.
 
 %In practice, we double count slightly when displaying the values of the restricted code cocycle, and use the \emph{disjoint} union $V \sqcup W$, rather than $V\cup W$, to label the colums and rows of the resulting array.
 The top left quadrant of Figure~\ref{fig:Parker cocycle} then contains to the restriction of $\theta$ to $V\times V$, and the bottom right quadrant the restriction to $W\times W$. 
 The off-diagonal quadrants contain the values of $\theta$ restricted to $V\times W$ and $W\times V$.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=0.8\textwidth]{alpha_awesum.png}
 \end{center}
-\caption{The restriction of the Parker loop code cocycle $\theta$ to $(V\sqcup W)^2$}
+\caption{The restriction of the Parker loop code cocycle $\theta$ to $(V\cup W)^2$}
 \label{fig:Parker cocycle}
 \end{figure}
 
-Remarkably, the restriction of the Parker loop $\cP\big|_V$ reduces to a direct product: $\theta\big|_{V\times V}$ is identically zero! Moreover, the restriction of $\cP\big|_W$ is the direct product $(\FF_2)^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
+Remarkably, the restriction $\cP\big|_V$ of the Parker loop reduces to a direct product since $\theta\big|_{V\times V}$ is identically zero. 
+Moreover, the restriction $\cP\big|_W$ is the direct product $(\FF_2)^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
 
 Full Parker cocycle is contain in the supplementary file ....
 
