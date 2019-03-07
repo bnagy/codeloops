@@ -257,7 +257,7 @@ and is doubly even.
 A more substantial example is given by the Golay code.
 
 \begin{example}\label{example:Golay}
-The Golay code $\cG \subset (\FF_2)^{24}$ is the span of the following (row) vectors:
+The (extended binary) Golay code $\cG \subset (\FF_2)^{24}$ is the span of the following (row) vectors:
 \[	
 	 \begin{array}{c}
      000110000000010110100011 \\
@@ -302,10 +302,16 @@ A \emph{code cocycle} $\theta\colon \cC \times \cC \to \FF_2$ is a function sati
 What we call a code cocycle, Griess actually calls a `factor set'. Given that a code cocycle is an example of a twisted cocycle, we prefer a name that indicates this.
 \end{remark}
 
+
+There is a notion of what it means for two twisted cocycles to be equivalent, and equivalent twisted cocycles $\alpha \sim \beta$ give isomorphic loops $\FF_2\times_\alpha V \simeq \FF_2\times_\beta V$.
+As part of \cite[Theorem 10]{Griess}, Griess proves that all code cocycles for a given doubly even code are equivalent, and hence give isomorphic cocde loops.
+
 It is not obvious, on first consideration, that code cocycles even exist, or how many there are for a given doubly even code. 
 However, Griess gave a proof that inductively constructs code cocycles, and counts how many arbitrary choices can be made along the way, proving that code cocycles do indeed exist.
 The number of possible code cocycles quickly becomes fearsome: $2^{2^k-k-1}$, for $k=\dim \cC$ (\cite[Theorem 10]{Griess}).
-For the $4$-dimensional Hamming code given above, this is $512$, but for the extended Golay code there are $2^{4083}$ possible code cocycles, a number with $1230$ digits in base $10$.
+For the $4$-dimensional Hamming code given above, this is $512$, but for the Golay code there are $2^{4083}$ possible code cocycles, a number with $1230$ digits in base $10$.
+However, the set of all possible functions $\cC\times \cC \to \FF_2$ has $2^{k^2}$ elements; for the Golay code ($k=12$) this number is astronomical.
+A brute-force search is completely infeasible.
 
 
 
@@ -422,21 +428,33 @@ The off-diagonal quadrants contain the values of $\theta$ restricted to $V\times
 \label{fig:Parker cocycle}
 \end{figure}
 
-Remarkably, the restriction $\cP\big|_V$ of the Parker loop reduces to a direct product since $\theta\big|_{V\times V}$ is identically zero. 
-Moreover, the restriction $\cP\big|_W$ is the direct product $(\FF_2)^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
+From Figure~\ref{fig:Parker cocycle} we can immediately see that the restriction of the Parker loop $\cP\big|_V$ reduces to a direct product, as $\theta\big|_{V\times V}$ is identically zero. 
+Moreover, the restriction of $\cP\big|_W$ is the direct product $(\FF_2)^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
+This is because what was a single pixel in Figure~\ref{fig:cocycle for M} is now an $8\times 8$ block of pixels in Figure~\ref{fig:Parker cocycle}.
 
-Full Parker cocycle is contain in the supplementary file ....
+\section{Discussion and comparison}
+
+The Parker loop $\cP$ is a sporadic object that has spawned a small industry trying to understand and construct code loops in general, as a class of Moufang loops that are fairly easy to describe.
+
+Aside from the description by Griess using code cocycles, there was an unpublished description by Parker, an unpublished thesis \cite{Johnson}, characterisations as loops with specified commutators and associators \cite{CheinGoodaire}, an iterative construction using centrally twisted products \cite{Hsu}, and a construction using groups with triality \cite{Nagy}. 
+The LOOPS library \cite{LOOPS} for software package GAP \cite{GAP} contains all the code loops of order $64$ and below, although ``the package is intended primarily for quasigroups and loops of small order, say up to $1000$''.
+Even the more recent \cite{OBrien_Vojtechovsky}, which classifies code loops up to order $512$ in order to add them to the LOOPS package, falls short of the Parker loop's $8192$ elements; the authors say ``our work suggests that it will be difficult to extend the classification of code loops beyond order $512$''.
+In principle, there is nothing stopping the construction of $\cP$ in LOOPS, but it will essentially be stored as a multiplication table, which would comprise $67,108,864$ entries, each of which is a $13$-bit element label.
+The paper \cite{Morier-Genoud_Ovsienko} describes an algebraic formula for a code cocycle that will build the Parker loop, as a combination of the recipe in the proof of Proposition~6.6 and the generating function in Proposition~9.2 of \emph{loc.\ cit}.
+This formula is a polynomial with $330$ cubic terms and $12$ quadratic terms in $24$ variables, being coefficients of basis vectors of $\cG$. 
+To compare, combined with the small amount of data in Figure~\ref{fig:Parker cocycle} together with a labelling of rows/columns by words of the Golay code, Lemma~\ref{lemma:formula lemma} only requires 9 terms, of which four are cubic and the rest come from the $16,129$ stored values of $\theta$.
+Large numbers of computations in $\cP$ require optimising the multiplications, and we have found a space/time trade-off that must surely approach the more effective end of the spectrum.
+
+In addition to computational savings, the ability to visually explore the structure of code loops during experimentation more generally seems a novel advance---the recognition of $(\FF_2)^3\times M$ inside $\cP$ was purely by inspection of the picture of the code cocyle then consulting the small list of Moufang loops of small order \cite{Chein}.
+Discovery of the basis in Example~\ref{example:Golay} was by walking through the spaces of bases of subcodes and working with the heuristic that more regularity in the appearance of the code cocycle is better.
+Additionally, our code flagged when subloops thus considered were in fact associative, and hence a group, leading to the discovery of the relatively large elementary subgroups $(\FF_2)^7 < \cP$ and $(\FF_2)^6 < (\FF_2)^3\times M < \cP$. [[DR: DOUBLE CHECK THIS IS DESCRIBED RIGHT FIRST TIME!!!]]
+
+Finally, one can also remark that because of the identity (\ref{eq: code cocycle 2}), one can reconstruct the top right quadrant of Figure~\ref{fig:Parker cocycle} from the bottom left quadrant, and vice versa. 
+Thus one can describe the Parker loop as being generated by the subloops $(\FF)^7$ and $(\FF_2)^3\times M$, with relations coming from the information contained in the bottom left quadrant of Figure~\ref{fig:Parker cocycle}, and the formulas (\ref{eq: code cocycle 2}) and (\ref{eq:theformula}).
+The regularity in that bottom left quadrant is intriguing, and perhaps indicative of further simplifications; this will be left to future work.
 
 
-Parker is generated by two diagonal subloops, together with info in one of the off-diagonal quadrants of the restricted theta
-
-Determining subloop structure of code loops?
-
-Space/time tradeoff for calculating in Parker?
-
-Using the visualisation to drive exploration of structure
-
-
+Reference to machine-readable version of the figure.!!!!!
 
 
 
@@ -483,19 +501,33 @@ DMR is supported by the Australian Research Council's Discovery Projects scheme,
 \end{acknowledgment}
 
 \begin{thebibliography}{1}
+\bibitem{Chein} Orin Chein, Moufang Loops of Small Order.\ I \emph{Trans.\ Am. Math. Soc.} \textbf{188} (1974) 31--51.
 
-\bibitem{Chein}Orin Chein, Moufang Loops of Small Order.\ I \emph{Trans.\ Am. Math. Soc.} \textbf{188} (1974) 31--51.
+\bibitem{CheinGoodaire} Orin Chein and Edgar G.\ Goodaire, Moufang loops with a unique nonidentity commutator (associator, square), \emph{J.\ Algebra} \textbf{130} (1990) 369--384.
 
 \bibitem{Conway} John H.\ Conway, A simple construction for the Fischer--Griess monster group \emph{Invent.\ math.} \textbf{79} (1985) 513--540.
 
+\bibitem[GAP]{GAP4} The GAP~Group, \emph{GAP -- Groups, Algorithms, and Programming, Version 4.10.0} (2018) \url{https://www.gap-system.org}.
+
 \bibitem{Griess} Robert L.\ Griess Jr., Code loops \emph{J.\ Algebra} \textbf{100} (1986) 224--234.
+
+\bibitem{Hsu} Tim Hsu, Explicit constructions of code loops as centrally twisted products, \emph{Math.\ Proc.\ Cam\. Phil\. Soc.} \textbf{128} (2000) 223--232.
+
+\bibitem{Johnson} Peter Johnson, Gamma spaces and loops of nilpotence class two, PhD thesis, University of Illinois at Chicago, 1988.
+
+\bibitem{LOOPS} G\'abor P.\ Nagy and Petr Vojt\v{e}chovsk\'{y}, LOOPS: Package for GAP, Version 3.4.0. \url{https://www.cs.du.edu/~petr/loops/}, 2017.
+
+\bibitem{Morier-Genoud_Ovsienko} Sophie Morier-Genoud and Valentin Ovsienko, A series of algebras generalizing the octonions and Hurwitz-Radon identity, \textbf{Commun. Math. Phys.} \textbf{306} (2011) 83--118, arXiv:1003.0429
 
 \bibitem{Moufang} Ruth Moufang, Zur Struktur von Alternativk\"orpern \emph{Math. Ann.} \textbf{110} (1935) 416--430. doi:10.1007/bf01448037
 
 \bibitem{RN_GH} Ben Nagy and David Michael Roberts, \texttt{codeloops}, GitHub repository, (2019) \url{https://github.com/bnagy/codeloops}
 
-\bibitem{Thompson} Thomas M.\ Thompson (1983). From Error Correcting Codes through Sphere Packings to Simple Groups. Carus Mathematical Monographs. \textbf{21}. Mathematical Association of America. 
+\bibitem{Nagy} G\'abor P.\ Nagy, Direct construction of code loops, \emph{Discrete Mathematics} \textbf{308} (2008) 5349--5357.
 
+\bibitem{OBrien_Vojtechovsky} Eamonn A.\ O'Brien and and Petr Vojt\v{e}chovsk\'{y}, Code loops in dimension at most 8, \emph{J.\ Algebra} \textbf{473} (2017) 607--626, arXiv:1712.06524.
+
+\bibitem{Thompson} Thomas M.\ Thompson, From Error Correcting Codes through Sphere Packings to Simple Groups. Carus Mathematical Monographs. \textbf{21}. Mathematical Association of America, 1983. 
 \end{thebibliography}
 
 \begin{biog}
