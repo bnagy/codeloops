@@ -5,9 +5,6 @@
 
 \usepackage{algorithm2e}
 
-%% IF YOU HAVE FONTS INSTALLED
-%\usepackage{mtpro2}
-%\usepackage{mathtime}
 \usepackage{amsfonts}
 
 \theoremstyle{plain}
@@ -39,7 +36,9 @@
 \maketitle
 
 \begin{abstract}
-Write later.
+The Parker loop is a central extension of the extended binary Golay code. It is an example of a general class of non-associative structures known as \emph{code loops}, which have been studied from a number of different algebraic and combinatorial perspectives.
+This expository paper aims to also highlight an experimental approach to computing in code loops, by a combination of a small amount of precomputed information and making use of the rich identities that code loops' twisted cocycles satisfy.
+As a biproduct one can reconstruct the multiplication in the Parker loop from a mere fragment of its twisted cocycle, and we have found relatively large subspaces of the Golay code over which the Parker loop splits as a direct product.
 \end{abstract}
 
 
@@ -92,7 +91,6 @@ We can measure the failure of $s$ to be a group homomorphism by considering the 
 defined by $ (-1)^{d(v,w)} = s(v)s(w)s(v+w)^{-1}$. 
 It is a nice exercise to see that $s(v)s(w)s(v+w)^{-1}$ is always $\pm 1$, so that this definition makes sense. The values of $d(v,w)$ are given as:
 
-% \medskip
 \begin{center}
 \begin{tabular*}{0.35\textwidth}{c|cccc}
 $v\setminus w$&$00$&$10$&$01$&$11$\\
@@ -113,28 +111,6 @@ for all triples $u,v,w\in V_4$. It is also immediate from the definition that $d
 An alternative visualisation is given in Figure~\ref{fig:cocycle for q8}.
 
 \begin{figure}[!b]
-% \begin{minipage}[b]{4cm}
-% \[
-% \begin{array}{c|cccc}
-% v\setminus w&00&10&01&11\\
-% \hline
-% 	00		& 0& 0& 0& 0\\
-% 	10		& 0& 1& 1& 0\\
-% 	01		& 0& 0& 1& 1\\
-% 	11		& 0& 1& 0& 1\\
-% \end{array}
-% \]
-% \end{minipage} 
-% \hspace{1cm}
-% \begin{tabular*}{0.35\textwidth}{c|cccc}
-% $v\setminus w$&00&10&01&11\\
-% \hline
-% 	00		& 0& 0& 0& 0\\
-% 	10		& 0& 1& 1& 0\\
-% 	01		& 0& 0& 1& 1\\
-% 	11		& 0& 1& 0& 1\\
-% \end{tabular*}
-% \hspace{3cm} 
 \begin{center}
 \includegraphics[height=2.5cm]{quaternion_cocyc} %%% Want this to be a pdf image, not png
 \end{center}
@@ -324,11 +300,6 @@ The code cocycle is then built up inductively over larger and larger subspaces $
 
 However, the description by Griess is more of an outline, using steps like `determine the cocycle on such-and-such subset using identity X', where X refers to one of (\ref{eq: code cocycle 1}), (\ref{eq: code cocycle 2}), (\ref{eq: code cocycle 3}), or corollaries of these. We have reconstructed the process in detail in Algorithm~\ref{Griess algo}.
 
-% Griess' method starts by choosing a total flag and then choosing a specified new vector in each higher-dimensional subspace, but we have rather chosen to input a basis $\{v_0,\ldots,v_{n-1}\}$, and then generate the flag $V_0 \subset V_1 \subset \cdots \subset V_{n-1} = C$ as $V_i = \Span\{v_0,\ldots,v_i\}$.
-% Ater an initialisation step (D0), the algorithm loops through steps D1-D4 for each subspace $V_1$,\ldots,$V_{n-1}$.
-
-% Here's a sample of the first pass of the algorithm, though we need to check this against the implementation, and it should generalise to $v \in \Span(\text{already considered vectors})$.\sidenote{I guess we should use some kind of algorithm package to write this up? Eg \url{https://en.wikibooks.org/wiki/LaTeX/Algorithms}}
-
 \begin{algorithm}[b]
 \small
 \caption{Reverse engineered from proof of \cite[Theorem 10]{Griess}.}\label{Griess algo}
@@ -435,7 +406,6 @@ Compared to the full domain of $\theta$, which has $2^{2k}\times 2^{2k} = (2^k)^
 And, now it should be clear why the Golay code basis in Example~\ref{example:Golay} was partitioned into two lists of six vectors: we can reconstruct all $16,777,216$ values of the resulting code cycle $\theta$, and hence the Parker loop multiplication, from a mere $2^{14} - 2^8 + 1 = 16,129$ values.
 The span of the left column of vectors in Example~\ref{example:Golay} is the subspace $V\subset \cG$, and the span of the right column of vectors is $W\subset \cG$.
 
-%In practice, we double count slightly when displaying the values of the restricted code cocycle, and use the \emph{disjoint} union $V \sqcup W$, rather than $V\cup W$, to label the colums and rows of the resulting array.
 The top left quadrant of Figure~\ref{fig:Parker cocycle} then contains to the restriction of $\theta$ to $V\times V$, and the bottom right quadrant the restriction to $W\times W$. 
 The off-diagonal quadrants contain the values of $\theta$ restricted to $V\times W$ and $W\times V$.
 
@@ -443,7 +413,7 @@ The off-diagonal quadrants contain the values of $\theta$ restricted to $V\times
 \begin{center}
 \includegraphics[width=0.8\textwidth]{alpha_awesum.png}
 \end{center}
-\caption{The restriction of the Parker loop code cocycle $\theta$ to $(V\cup W)^2$. A machine-readable version is available in \cite{RN_GH}. The order of the row/column labels is $\underline{0},b_1,b_2,b_1+b_2,b_3,\ldots, b_1+\cdots +b_6$, $b_7,b_8,b_7+b_8,\ldots,b_7+\cdots + b_{12}$.}
+\caption{The restriction of the Parker loop code cocycle $\theta$ to $(V\cup W)^2$. A machine-readable version is available in \cite{RN_GH} or as an arXiv ancillary file. The order of the row/column labels is $\underline{0},b_1,b_2,b_1+b_2,b_3,\ldots, b_1+\cdots +b_6$, $b_7,b_8,b_7+b_8,\ldots,b_7+\cdots + b_{12}$.}
 \label{fig:Parker cocycle}
 \end{figure}
 
@@ -474,43 +444,6 @@ The regularity in that bottom left quadrant is intriguing, and perhaps indicativ
 
 
 
-
-
-
-
-
-% \section{Graphics.}
-
-% Figures for the \textsc{Monthly} can be submitted as either color or black \& white graphics.  Generally, color graphics will be used for the online publication, and converted to black \& white images for the print journal.  We recommend using whatever graphics program you are most comfortable with, so long as the submitted graphic is provided as a separate file using a standard file format.
-
-% For best results, please follow the following guidelines:
-% \begin{enumerate}
-% \item Bitmapped file formats---preferably TIFF or JPEG, but not BMP---are appropriate for photographs, using a resolution of at least 300 dpi at the final scaled size of the image.
-% \item Line art will reproduce best if provided in vector form, preferably EPS.
-% \item Alternatively, both photographs and line art can be provided as PDF files.  Note that creating a PDF does not affect whether the graphic is a bitmap or vector; saving a scanned piece of line art as PDF does not convert it to scalable line art.
-% \item If you generating graphics using a \TeX\ package, please be sure to provide a PDF of the manuscript.  In the production process, \TeX-generated graphics will eventually be converted to more conventional graphics so the \textsc{Monthly} can be delivered in e-reader formats.
-% \item For photos of contributing authors, we prefer photos that are not cropped tight to the author's profile, so that production staff can crop the head shot to an equal height and width.  If possible, avoid photographs that have excess shadows or glare.
-% \end{enumerate}
-
-% \section{Theorems, definitions, proofs, and all that.}
-
-% Following the defaults of the \texttt{amsthm} package, styling is provided for \texttt{theorem}, \texttt{definition}, and \texttt{remark} styles, although the latter two use the same styling.
-
-% \begin{theorem}[Pythagorean Theorem]
-% Theorems, lemmas, axioms, and the like are stylized using italicized text. These environments can be numbered or unnumbered, at the author's discretion.
-% \end{theorem}
-
-% \begin{proof}
-% Proofs set in roman (upright) text, and conclude with an ``end of proof'' (q.e.d.) symbol that is set automatically when you end the proof environment.  When the proof ends with an equation or other non-text element, you need to add \verb~\qedhere~ to the element to set the end of proof symbol; see the \texttt{amsthm} package documentation for more details.
-% \end{proof}
-
-% \begin{definition}[Secant Line]
-% Definitions, remarks, and notation are stylized as roman text.  They are typically unnumbered, but there are no hard-and-fast rules about numbering.
-% \end{definition}
-
-% \begin{remark}
-% Remarks stylize the same as definitions.
-% \end{remark}
 
 
 \begin{acknowledgment}{Acknowledgment.}
