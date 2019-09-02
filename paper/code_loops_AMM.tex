@@ -20,7 +20,7 @@
 \def \cG {\mathcal{G}}
 \def \cP {\mathcal{P}}
 \def \FF {\mathbb{F}}
-\newcommand{\AND}{\mathbin{\texttt{\&}}}
+\newcommand{\AND}{\mathbin{\textup{\texttt{\&}}}}
 \DeclareMathOperator{\im}{im}
 \def\And{\mathbin{\&}}
 \def\Plus{+}
@@ -273,7 +273,7 @@ A \emph{code cocycle}\footnote{What we call a code cocycle, Griess actually call
 \begin{align}
 & \theta(v,w)-\theta(u+v,w)+\theta(u,v+w)-\theta(u,v) =|u\AND v \AND w| \pmod 2 \label{eq: code cocycle 1}\\
 & \theta(v,w)+\theta(w,v) = {}  \tfrac12|v\AND w| \pmod 2 \label{eq: code cocycle 2}\\
-& \alpha(v,v) = {}  \tfrac14|v| \pmod 2\label{eq: code cocycle 3}
+& \theta(v,v) = {}  \tfrac14|v| \pmod 2\label{eq: code cocycle 3}
 \end{align}
 A \emph{code loop} is then a loop arising as $\FF_2\times_\theta \cC$ (up to isomorphism) for some code cocycle $\theta$.
 \end{definition}
@@ -288,7 +288,7 @@ However, Griess gave a proof that inductively constructs code cocycles, and coun
 The number of possible code cocycles quickly becomes fearsome: $2^{2^k-k-1}$, for $k=\dim \cC$ (\cite[Theorem 10]{Griess}).
 For the $4$-dimensional Hamming code given above, this is $512$, but for the Golay code there are $2^{4083}$ possible code cocycles, a number with $1230$ digits in base $10$.
 Even though there are many code cocycles, finding even one by brute force is completely infeasible.
-The set of all possible functions $\cC\times \cC \to \FF_2$ has $2^{k^2}$ elements; for the Golay code ($k=12$) this number is astronomical.
+The set of all possible functions $\cC\times \cC \to \FF_2$ has $2^{2^k}$ elements; for the Golay code ($k=12$) this number is astronomical.
 
 
 
@@ -302,7 +302,7 @@ However, the description by Griess is more of an outline, using steps like `dete
 
 \begin{algorithm}[b]
 \small
-\caption{Reverse engineered from proof of \cite[Theorem 10]{Griess}.}\label{Griess algo}
+\caption{Reverse-engineered from proof of \cite[Theorem 10]{Griess}.}\label{Griess algo}
 \SetAlgoLined
 \DontPrintSemicolon
 \KwData{Basis $B = \{b_0,b_1,\ldots,b_{k-1}\}$ for the code $\cC$}
@@ -321,17 +321,17 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 	\ForAll{$v\in V_i$}{
 		\eIf{$v\neq0$}{
 			$\theta(b_i,v) \leftarrow \text{random}$ \tcp*{In practice, random = 0}
-			$\theta(v,b_i) \leftarrow \tfrac12\left|v\And b_i\right|+\theta(b_i,v)$\;
+			$\theta(v,b_i) \leftarrow \tfrac12\left|v\AND b_i\right|+\theta(b_i,v)$\;
 		}
 		{
 			\tcp{$\theta(b_i,v)$ is already set to 0}
-			$\theta(v,b_i)\leftarrow \tfrac12\left|v\And b_i\right|$\;
+			$\theta(v,b_i)\leftarrow \tfrac12\left|v\AND b_i\right|$\;
 		}
 	}
 	\tcp{(D2) deduce theta on \{bi\} x Wi and Wi x \{bi\}}
 	\ForAll{$v\in V_i$}{
 		$\theta(b_i,b_i\Plus v) \leftarrow \tfrac14\left|b_i\right| + \theta(b_i,v)$\;
-		$\theta(b_i\Plus v,b_i) \leftarrow \tfrac12\left|b_i\And (b_i\Plus v)\right| + \tfrac14\left|b_i\right| + \theta(b_i,v)$\;
+		$\theta(b_i\Plus v,b_i) \leftarrow \tfrac12\left|b_i\AND (b_i\Plus v)\right| + \tfrac14\left|b_i\right| + \theta(b_i,v)$\;
 	}
 	\tcp{(D3) deduce theta on Wi x Wi}
 	\ForAll{$v_1\in V_i$}{
@@ -340,7 +340,7 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 			$a\leftarrow \theta(v_1,b_i)$\;
 			$b\leftarrow \theta(v_1,b_i\Plus w)$\;
 			$c\leftarrow \theta(w,b_i)$\;
-			$r \leftarrow \tfrac12\left|v_1\And w\right| + a + b + c$\;
+			$r \leftarrow \tfrac12\left|v_1\AND w\right| + a + b + c$\;
 			$\theta(w,b_i\Plus v_1) \leftarrow r$
 		}
 	}
@@ -350,7 +350,7 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 			$w\leftarrow b_i \Plus v_2$\;
 			$a\leftarrow \theta(w,v_1\Plus w)$\;
 			$\theta(w,v_1) \leftarrow \tfrac14\left|w\right| + a$\;
-			$\theta(v_1,w) \leftarrow \tfrac12\left|v_1\And w\right| + \tfrac14\left|w\right| + a$\;
+			$\theta(v_1,w) \leftarrow \tfrac12\left|v_1\AND w\right| + \tfrac14\left|w\right| + a$\;
 		}
 	}
 }
@@ -371,8 +371,8 @@ Then for $v_1,v_2\in V$ and $w_1,w_2\in W$,
 	\theta(v_1\Plus w_1,v_2\Plus w_2)	
 		& = \theta(v_1,v_2)  + \theta(w_1,w_2) + \theta(v_1,w_1) \\
 		&+ \theta(w_2,v_2) + \theta(v_1\Plus v_2,w_1\Plus w_2) \nonumber \\
-							& + \tfrac12|v_2\And(w_1\Plus w_2)| + |v_1\And v_2 \And (w_1\Plus w_2)| \nonumber \\
-							&+|w_1\And w_2 \And v_2| + \left|v_1\And w_1 \And (v_2 \Plus  w_2)\right| \pmod 2\,. \nonumber
+							& + \tfrac12|v_2\AND(w_1\Plus w_2)| + |v_1\AND v_2 \AND (w_1\Plus w_2)| \nonumber \\
+							&+|w_1\AND w_2 \AND v_2| + \left|v_1\AND w_1 \AND (v_2 \Plus  w_2)\right| \pmod 2\,. \nonumber
 \end{align}
 \end{lemma}
 
