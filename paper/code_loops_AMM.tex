@@ -1,6 +1,6 @@
 \documentclass{article}
-\usepackage{custom} %% Have stripped out journal/publisher identifiers and trim marks
-% \usepackage{maa-monthly} %% For actual journal style
+% \usepackage{custom} %% Have stripped out journal/publisher identifiers and trim marks
+\usepackage{maa-monthly} %% For actual journal style
 \usepackage{textcomp}
 
 \usepackage{algorithm2e}
@@ -31,7 +31,9 @@
 
 \title{(Re)constructing code loops}
 \markright{Reconstructing code loops}
-\author{Ben Nagy and David Michael Roberts}
+\author{%
+%Ben Nagy and David Michael Roberts
+}
 
 \maketitle
 
@@ -300,61 +302,6 @@ The code cocycle is then built up inductively over larger and larger subspaces $
 
 However, the description by Griess is more of an outline, using steps like `determine the cocycle on such-and-such subset using identity X', where X refers to one of (\ref{eq: code cocycle 1}), (\ref{eq: code cocycle 2}), (\ref{eq: code cocycle 3}), or corollaries of these. We have reconstructed the process in detail in Algorithm~\ref{Griess algo}.
 
-\begin{algorithm}[b]
-\small
-\caption{Reverse-engineered from proof of \cite[Theorem 10]{Griess}.}\label{Griess algo}
-\SetAlgoLined
-\DontPrintSemicolon
-\KwData{Basis $B = \{b_0,b_1,\ldots,b_{k-1}\}$ for the code $\cC$}
-\KwResult{Code cocycle $\theta\colon \cC\times \cC\to \FF_2$, encoded as a square array of elements from $\FF_2$, with rows and columns indexed by $\cC$ }
-\;
-\tcp{Initialise} 
-\ForAll{$c_1,c_2 \in C$}{
-$\theta(c_1,c_2) \leftarrow 0$\;
-}
-
-$\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
-\;
-\ForAll{$1\leq i\leq \Length(B)$}{
-	Define $V_i :=\Span\{b_0,\ldots,b_{i-1}\}$\;
-	\tcp{(D1) define theta on \{bi\} x Vi then deduce on Vi x \{bi\}}
-	\ForAll{$v\in V_i$}{
-		\eIf{$v\neq0$}{
-			$\theta(b_i,v) \leftarrow \text{random}$ \tcp*{In practice, random = 0}
-			$\theta(v,b_i) \leftarrow \tfrac12\left|v\AND b_i\right|+\theta(b_i,v)$\;
-		}
-		{
-			\tcp{$\theta(b_i,v)$ is already set to 0}
-			$\theta(v,b_i)\leftarrow \tfrac12\left|v\AND b_i\right|$\;
-		}
-	}
-	\tcp{(D2) deduce theta on \{bi\} x Wi and Wi x \{bi\}}
-	\ForAll{$v\in V_i$}{
-		$\theta(b_i,b_i\Plus v) \leftarrow \tfrac14\left|b_i\right| + \theta(b_i,v)$\;
-		$\theta(b_i\Plus v,b_i) \leftarrow \tfrac12\left|b_i\AND (b_i\Plus v)\right| + \tfrac14\left|b_i\right| + \theta(b_i,v)$\;
-	}
-	\tcp{(D3) deduce theta on Wi x Wi}
-	\ForAll{$v_1\in V_i$}{
-		\ForAll{$v_2\in V_i$}{
-			$w\leftarrow b_i \Plus v_2$\;
-			$a\leftarrow \theta(v_1,b_i)$\;
-			$b\leftarrow \theta(v_1,b_i\Plus w)$\;
-			$c\leftarrow \theta(w,b_i)$\;
-			$r \leftarrow \tfrac12\left|v_1\AND w\right| + a + b + c$\;
-			$\theta(w,b_i\Plus v_1) \leftarrow r$
-		}
-	}
-	\tcp{(D4) deduce theta on Wi x Vi and Vi x Wi}
-	\ForAll{$v_1\in V_i$}{
-		\ForAll{$v_2\in V_i$}{
-			$w\leftarrow b_i \Plus v_2$\;
-			$a\leftarrow \theta(w,v_1\Plus w)$\;
-			$\theta(w,v_1) \leftarrow \tfrac14\left|w\right| + a$\;
-			$\theta(v_1,w) \leftarrow \tfrac12\left|v_1\AND w\right| + \tfrac14\left|w\right| + a$\;
-		}
-	}
-}
-\end{algorithm}
 
 We implemented Algorithm~\ref{Griess algo} in the language Go \cite{RN_GH}, together with diagnostic tests, for instance to verify the Moufang property.
 The output of the algorithm is the code cocycle, encoded as a matrix of ones and zeroes, and can be displayed as an array of black and white pixels.
@@ -444,14 +391,173 @@ The regularity in that bottom left quadrant is intriguing, and perhaps indicativ
 
 
 
+\begin{algorithm}[!h]
+\small
+\caption{Reverse-engineered from proof of \cite[Theorem 10]{Griess}.}\label{Griess algo}
+\SetAlgoLined
+\DontPrintSemicolon
+\KwData{Basis $B = \{b_0,b_1,\ldots,b_{k-1}\}$ for the code $\cC$}
+\KwResult{Code cocycle $\theta\colon \cC\times \cC\to \FF_2$, encoded as a square array of elements from $\FF_2$, with rows and columns indexed by $\cC$ }
+\;
+\tcp{Initialise} 
+\ForAll{$c_1,c_2 \in C$}{
+$\theta(c_1,c_2) \leftarrow 0$\;
+}
+
+$\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
+\;
+\ForAll{$1\leq i\leq \Length(B)$}{
+	Define $V_i :=\Span\{b_0,\ldots,b_{i-1}\}$\;
+	\tcp{(D1) define theta on \{bi\} x Vi then deduce on Vi x \{bi\}}
+	\ForAll{$v\in V_i$}{
+		\eIf{$v\neq0$}{
+			$\theta(b_i,v) \leftarrow \text{random}$ \tcp*{In practice, random = 0}
+			$\theta(v,b_i) \leftarrow \tfrac12\left|v\AND b_i\right|+\theta(b_i,v)$\;
+		}
+		{
+			\tcp{$\theta(b_i,v)$ is already set to 0}
+			$\theta(v,b_i)\leftarrow \tfrac12\left|v\AND b_i\right|$\;
+		}
+	}
+	\tcp{(D2) deduce theta on \{bi\} x Wi and Wi x \{bi\}}
+	\ForAll{$v\in V_i$}{
+		$\theta(b_i,b_i\Plus v) \leftarrow \tfrac14\left|b_i\right| + \theta(b_i,v)$\;
+		$\theta(b_i\Plus v,b_i) \leftarrow \tfrac12\left|b_i\AND (b_i\Plus v)\right| + \tfrac14\left|b_i\right| + \theta(b_i,v)$\;
+	}
+	\tcp{(D3) deduce theta on Wi x Wi}
+	\ForAll{$v_1\in V_i$}{
+		\ForAll{$v_2\in V_i$}{
+			$w\leftarrow b_i \Plus v_2$\;
+			$a\leftarrow \theta(v_1,b_i)$\;
+			$b\leftarrow \theta(v_1,b_i\Plus w)$\;
+			$c\leftarrow \theta(w,b_i)$\;
+			$r \leftarrow \tfrac12\left|v_1\AND w\right| + a + b + c$\;
+			$\theta(w,b_i\Plus v_1) \leftarrow r$
+		}
+	}
+	\tcp{(D4) deduce theta on Wi x Vi and Vi x Wi}
+	\ForAll{$v_1\in V_i$}{
+		\ForAll{$v_2\in V_i$}{
+			$w\leftarrow b_i \Plus v_2$\;
+			$a\leftarrow \theta(w,v_1\Plus w)$\;
+			$\theta(w,v_1) \leftarrow \tfrac14\left|w\right| + a$\;
+			$\theta(v_1,w) \leftarrow \tfrac12\left|v_1\AND w\right| + \tfrac14\left|w\right| + a$\;
+		}
+	}
+}
+\end{algorithm}
 
 
-\begin{acknowledgment}{Acknowledgment.}
-DMR is supported by the Australian Research Council's Discovery Projects scheme, (project number DP180100383), funded by the Australian Government.
-\end{acknowledgment}
+% \begin{acknowledgment}{Acknowledgment.}
+% DMR is supported by the Australian Research Council's Discovery Projects scheme, (project number DP180100383), funded by the Australian Government.
+% \end{acknowledgment}
+
+\newpage
+
+\begin{thebibliography}{10}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+ \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+ \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+
+\bibitem{Chein}
+Chein, O. (1974).
+\newblock Moufang loops of small order. {I}.
+\newblock \emph{Trans. Amer. Math. Soc.}, 188: 31--51.
+\newblock \doi{10.2307/1996765}.
+
+\bibitem{CheinGoodaire}
+Chein, O., Goodaire, E.~G. (1990).
+\newblock Moufang loops with a unique nonidentity commutator (associator,
+  square).
+\newblock \emph{J. Algebra}, 130(2): 369--384.
+\newblock \doi{10.1016/0021-8693(90)90087-5}.
+
+\bibitem{Conway}
+Conway, J.~H. (1985).
+\newblock A simple construction for the {F}ischer-{G}riess monster group.
+\newblock \emph{Invent. Math.}, 79(3): 513--540.
+\newblock \doi{10.1007/BF01388521}.
+
+\bibitem{SPLAG}
+Conway, J.~H., Sloane, N. J.~A. (1999).
+\newblock \emph{Sphere packings, lattices and groups}, vol. 290 of
+  \emph{Grundlehren der Mathematischen Wissenschaften}.
+\newblock Springer-Verlag, New York, 3rd ed.
+% \newblock With additional contributions by E. Bannai, R. E. Borcherds, J. Leech, S. P. Norton, A. M. Odlyzko, R. A. Parker, L. Queen and B. B. Venkov.
+
+\bibitem{GAP4}
+The GAP~Group (2019).
+\newblock {GAP -- Groups, Algorithms, and Programming, Version 4.10.2}. 
+\newblock \url{https://www.gap-system.org}.
+
+\bibitem{Griess}
+Griess, Jr., R.~L. (1986).
+\newblock Code loops.
+\newblock \emph{J. Algebra}, 100(1): 224--234.
+\newblock \doi{10.1016/0021-8693(86)90075-X}.
+
+\bibitem{Hsu}
+Hsu, T. (2000).
+\newblock Explicit constructions of code loops as centrally twisted products.
+\newblock \emph{Math. Proc. Cambridge Philos. Soc.}, 128(2): 223--232.
+\newblock \doi{10.1017/S030500419900403X}.
+
+\bibitem{Johnson}
+Johnson, P.~M. (1988).
+\newblock Gamma spaces and loops of nilpotence class two.
+\newblock Ph.D. thesis, University of Illinois at Chicago.
+
+
+\bibitem{Morier-Genoud_Ovsienko}
+Morier-Genoud, S., Ovsienko, V. (2011).
+\newblock A series of algebras generalizing the octonions and {H}urwitz-{R}adon
+  identity.
+\newblock \emph{Comm. Math. Phys.}, 306(1): 83--118.
+\newblock \doi{10.1007/s00220-011-1279-9}.
+
+\bibitem{Moufang}
+Moufang, R. (1935).
+\newblock Zur {S}truktur von {A}lternativk\"{o}rpern.
+\newblock \emph{Math. Ann.}, 110(1): 416--430.
+\newblock \doi{10.1007/BF01448037}.
+
+\bibitem{RN_GH}
+{library authors} (2019).
+\newblock \texttt{codeloops} library.
+\newblock \url{https://adelaide.figshare.com/s/e1cf101636659583a124} % GitHub repository, (2019) \url{https://github.com/bnagy/codeloops}
+
+\bibitem{Nagy}
+Nagy, G.~P. (2008).
+\newblock Direct construction of code loops.
+\newblock \emph{Discrete Math.}, 308(23): 5349--5357.
+\newblock \doi{10.1016/j.disc.2007.09.056}.
+
+\bibitem{LOOPS}
+Nagy, G., Vojt\v{e}chovsk\'{y}, P. (2018).
+\newblock {LOOPS -- a GAP package, Version 3.4.1}.
+\newblock \url{https://gap-packages.github.io/loops/}.
+
+\bibitem{OBrien_Vojtechovsky}
+O'Brien, E.~A., Vojt\v{e}chovsk\'{y}, P. (2017).
+\newblock Code loops in dimension at most 8.
+\newblock \emph{J. Algebra}, 473: 607--626.
+\newblock \doi{10.1016/j.jalgebra.2016.11.006}.
+
+
+
+\end{thebibliography}
+
+\end{document}
+
+
+
+\bibliographystyle{pseudo_amm}
+\bibliography{codeloops}
+\end{document}
 
 \begin{thebibliography}{1}
-\bibitem{Chein} Orin Chein, Moufang Loops of Small Order.\ I, \emph{Trans.\ Am. Math. Soc.} \textbf{188} (1974) 31--51.
+\bibitem{Chein} Chein, O (1974) Moufang Loops of Small Order.\ I, \emph{Trans.\ Am. Math. Soc.} \textbf{188} (1974) 31--51.
 
 \bibitem{CheinGoodaire} Orin Chein and Edgar G.\ Goodaire, Moufang loops with a unique nonidentity commutator (associator, square), \emph{J.\ Algebra} \textbf{130} (1990) 369--384.
 
@@ -459,7 +565,7 @@ DMR is supported by the Australian Research Council's Discovery Projects scheme,
 
 \bibitem{SPLAG} John H.\ Conway and Neil Sloane, Sphere packings, lattices and groups. Third Edition. Grundlehren der Mathematischen Wissenschaften \textbf{290} Springer-Verlag, New York, 1999.
 
-\bibitem{GAP4} The GAP~Group, \emph{GAP -- Groups, Algorithms, and Programming, Version 4.10.0} (2018) \url{https://www.gap-system.org}.
+\bibitem{GAP4} The GAP~Group, \emph{GAP -- Groups, Algorithms, and Programming, Version 4.10.0} (2018) \url{https://www.gap-system.org}. 
 
 \bibitem{Griess} Robert L.\ Griess Jr., Code loops, \emph{J.\ Algebra} \textbf{100} (1986) 224--234.
 
@@ -473,7 +579,8 @@ DMR is supported by the Australian Research Council's Discovery Projects scheme,
 
 \bibitem{Moufang} Ruth Moufang, Zur Struktur von Alternativk\"orpern \emph{Math. Ann.} \textbf{110} (1935) 416--430. doi:10.1007/bf01448037
 
-\bibitem{RN_GH} Ben Nagy and David Michael Roberts, \texttt{codeloops}, GitHub repository, (2019) \url{https://github.com/bnagy/codeloops}
+\bibitem{RN_GH} %Ben Nagy and David Michael Roberts, 
+\texttt{codeloops} library (2019) \url{https://adelaide.figshare.com/s/e1cf101636659583a124} % GitHub repository, (2019) \url{https://github.com/bnagy/codeloops}
 
 \bibitem{Nagy} G\'abor P.\ Nagy, Direct construction of code loops, \emph{Discrete Mathematics} \textbf{308} (2008) 5349--5357.
 
@@ -482,19 +589,19 @@ DMR is supported by the Australian Research Council's Discovery Projects scheme,
 % \bibitem{Thompson} Thomas M.\ Thompson, From Error Correcting Codes through Sphere Packings to Simple Groups. Carus Mathematical Monographs. \textbf{21}. Mathematical Association of America, Washington, DC, 1983. 
 \end{thebibliography}
 
-\begin{biog}
-\item[Ben Nagy] is an MPhil.\ candidate at the University of Adelaide, researching computational stylistics for Latin Poetry.
-\begin{affil}
-Department of Classics, Archaeology \& Ancient History, The University of Adelaide\\
-benjamin.nagy@adelaide.edu.au
-\end{affil}
+% \begin{biog}
+% \item[Ben Nagy] is an MPhil.\ candidate at the University of Adelaide, researching computational stylistics for Latin Poetry.
+% \begin{affil}
+% Department of Classics, Archaeology \& Ancient History, The University of Adelaide\\
+% benjamin.nagy@adelaide.edu.au
+% \end{affil}
 
-\item[David Michael Roberts] is a mathematician specialising in category theory, geometry and a hodge-podge of other random topics.
-\begin{affil}
-School of Mathematical Sciences, The University of Adelaide\\
-david.roberts@adelaide.edu.au
-\end{affil}
-\end{biog}
+% \item[David Michael Roberts] is a mathematician specialising in category theory, geometry and a hodge-podge of other random topics.
+% \begin{affil}
+% School of Mathematical Sciences, The University of Adelaide\\
+% david.roberts@adelaide.edu.au
+% \end{affil}
+% \end{biog}
 \vfill\eject
 
 \end{document}
