@@ -29,8 +29,8 @@
 
 \begin{document}
 
-\title{(Re)constructing code loops}
-\markright{Reconstructing code loops}
+\title{(Re)constructing Code Loops}
+\markright{Reconstructing Code Loops}
 \author{%
 %Ben Nagy and David Michael Roberts
 }
@@ -38,18 +38,19 @@
 \maketitle
 
 \begin{abstract}
-The Parker loop is a central extension of the extended binary Golay code. It is an example of a general class of non-associative structures known as \emph{code loops}, which have been studied from a number of different algebraic and combinatorial perspectives.
-This expository paper aims to also highlight an experimental approach to computing in code loops, by a combination of a small amount of precomputed information and making use of the rich identities that code loops' twisted cocycles satisfy.
+The Parker loop is a central extension of the extended binary Golay code. It is an example of a general class of nonassociative structures known as \emph{code loops}, which have been studied from a number of different algebraic and combinatorial perspectives.
+This expository article aims to also highlight an experimental approach to computing in code loops, by a combination of a small amount of precomputed information and making use of the rich identities that code loops' twisted cocycles satisfy.
 As a byproduct one can reconstruct the multiplication in the Parker loop from a mere fragment of its twisted cocycle, and we have found relatively large subspaces of the Golay code over which the Parker loop splits as a direct product.
 \end{abstract}
 
 
-\noindent
+\section{Introduction.}
+
 The theory of codes makes for a fascinating study. 
-At their heart, codes are `merely' subspaces of vector spaces over some small finite field, with certain combinatorial properties.
-Why do such things exist? Like a lot of exceptional objects in combinatorics, it can come down to: ``because''.
+At their heart, codes are ``merely'' subspaces of vector spaces over some small finite field, with certain combinatorial properties.
+Why do such things exist? Like a lot of exceptional objects in combinatorics, it can come down to ``because.''
 This makes constructing codes sometimes more of an art than something systematic.
-In this paper, we are going to consider the construction of certain structures closely related to codes, called \emph{code loops}. 
+In this article, we are going to consider the construction of certain structures closely related to codes, called \emph{code loops}. 
 We will only consider the case where the base field is $\FF_2=\{0,1\}$, and refer to its elements as \emph{bits}.
 
 The first published example of a code loop appeared as a step in John Conway's construction of the Monster sporadic simple group \cite{Conway}. 
@@ -60,9 +61,9 @@ More recent approaches will be discussed below.
 
 Recall that the elements (or \emph{words}) in a code $\cC$, being vectors, can be combined by addition---this is a group operation and hence associative. 
 The elements of a code loop consist of a pair: a code word and one extra bit.
-The extra bit \emph{twists} the addition so that combination of code loop elements is a \emph{non-associative operation}: $(xy)z\not=x(yz)$ in general.
+The extra bit \emph{twists} the addition so that combination of code loop elements is a \emph{nonassociative operation}: $(xy)z\not=x(yz)$ in general.
 
-More specifically, while addition of words in a code is performed by coordinate-wise addition in $\FF_2$ (bitwise XOR) the algebraic operation in a code loop is not so easily described.
+More specifically, while addition of words in a code is performed by coordinate-wise addition in $\FF_2$ (bitwise XOR), the algebraic operation in a code loop is not so easily described.
 The code loop operation can be reconstructed from a function $\cC \times \cC \to \FF_2$ satisfying certain identities, called a \emph{twisted cocycle}.
 It is the computation and presentation of these functions that will mainly concern us in this article, using Griess's algorithm \cite[proof of Theorem 10]{Griess}.
 As a result, we will observe some curious features of the Parker loop, obtained via experimentation and, it seems, previously unknown.
@@ -84,14 +85,14 @@ Moreover, this kernel is the \emph{center} of $Q_8$, the set of all elements tha
 Now $Q_8$ is a nonabelian group, but both $\FF_2$ and $V_4$ are abelian.
 One might think that it shouldn't be possible to reconstruct $Q_8$ from the latter two groups, but it is! 
 That is, if we are given some extra information that uses only the two abelian groups.
-There is a function $s\colon V_4 \to Q_8$, sending $(0,0)$ to $1$, $(1,0)$ to $i$, $(0,1)$ to $j$ and $(1,1)$ to $k$.
+There is a function $s\colon V_4 \to Q_8$, sending $(0,0)$ to $1$, $(1,0)$ to $i$, $(0,1)$ to $j$, and $(1,1)$ to $k$.
 This almost looks like a group homomorphism, but it is not, as $(1,0) + (1,0) = (0,0)$ in $V$, but $s(1,0)s(0,1) = i^2 \not= 1 = s(0,0)$ in $Q_8$.
 We can measure the failure of $s$ to be a group homomorphism by considering the two-variable function
 \[
 	d\colon V_4 \times V_4 \to \FF_2
 \]
 defined by $ (-1)^{d(v,w)} = s(v)s(w)s(v+w)^{-1}$. 
-It is a nice exercise to see that $s(v)s(w)s(v+w)^{-1}$ is always $\pm 1$, so that this definition makes sense. The values of $d(v,w)$ are given as:
+It is a nice exercise to see that $s(v)s(w)s(v+w)^{-1}$ is always $\pm 1$, so that this definition makes sense. The values of $d(v,w)$ are given as
 
 \begin{center}
 \begin{tabular*}{0.35\textwidth}{c|cccc}
@@ -103,14 +104,14 @@ $v\setminus w$&$00$&$10$&$01$&$11$\\
 	$11$		& $0$& $1$& $0$& $1$\\
 \end{tabular*}
 \end{center}
-where $00=(0,0)$, $10=(1,0)$ and so on.
+where $00=(0,0)$, $10=(1,0)$, and so on.
 If $s$ \emph{were} a homomorphism, $d$ would be constant at $0$.
-One can check that $d$ satisfies the \emph{cocycle identities}:
+One can check that $d$ satisfies the \emph{cocycle identities}
 \[
 	d(v,w)-d(u+v,w)+d(u,v+w)-d(u,v) = 0
 \]
 for all triples $u,v,w\in V_4$. It is also immediate from the definition that $d(0,0)=0$.
-An alternative visualisation is given in Figure~\ref{fig:cocycle for q8}.
+An alternative visualization is given in Figure~\ref{fig:cocycle for q8}.
 
 \begin{figure}[!b]
 \begin{center}
@@ -144,12 +145,12 @@ We can construct the Parker loop using a similar approach.
 \section{Twisted cocycles and loops.}
 
 The construction in the previous section is a fairly typical case of reconstructing a central extension from a cocycle (although in general one does not even need the analogue of the group $V_4$ to be abelian). 
-However, we wish to go one step further, and construct a structure with a \emph{non-associative} product from a pair of abelian groups: the group $\FF_2$ and additive group of a vector space $V$ over $\FF_2$.
+However, we wish to go one step further, and construct a structure with a \emph{nonassociative} product from a pair of abelian groups: the group $\FF_2$ and additive group of a vector space $V$ over $\FF_2$.
 Instead of a cocycle, we use a \emph{twisted cocycle}: a function $\alpha\colon V\times V \to \FF_2$ like $d$ that instead satisfies
 \[
-	\alpha(v,w)-\alpha(u+v,w)+\alpha(u,v+w)-\alpha(u,v) = f(u,v,w),
+	\alpha(v,w)-\alpha(u+v,w)+\alpha(u,v+w)-\alpha(u,v) = f(u,v,w)
 \]
-for a nonzero \emph{twisting function} $f\colon V\times V\times V \to \FF_2$. We will assume that $\alpha$ satisfies $\alpha(0,v)=\alpha(v,0) = 0$ for all $v\in V$, a property that holds for $d$ in the previous section. From a twisted cocycle the set $\FF_2 \times V$ can be given a binary operation $\ast_\alpha$:
+for a nonzero \emph{twisting function} $f\colon V\times V\times V \to \FF_2$. We will assume that $\alpha$ satisfies $\alpha(0,v)=\alpha(v,0) = 0$ for all $v\in V$, a property that holds for the map $d$ in the previous section. From a twisted cocycle the set $\FF_2 \times V$ can be given a binary operation $\ast_\alpha$:
 \[
 	(s,v)\ast_\alpha(t,w):=(s+ t+ \alpha(v,w),v+w).
 \]
@@ -165,8 +166,8 @@ There is a homomorphism $\pi\colon \FF_2\times_\alpha V \to V$ that projects ont
 \end{lemma}
 
 Groups are examples of loops, but they are, in a sense, the uninteresting case. 
-Arbitrary loops are quite badly behaved: their product is non-associative in general. 
-But there is a special non-associative case, introduced by Ruth Moufang \cite{Moufang}, with better algebraic properties.
+Arbitrary loops are quite badly behaved: their product is nonassociative in general. 
+But there is a special nonassociative case, introduced by Ruth Moufang \cite{Moufang}, with better algebraic properties.
 
 \begin{definition}
 A \emph{Moufang loop} is a loop $(L,\star)$ satisfying the identity
@@ -180,10 +181,10 @@ The most famous example of a Moufang loop is probably the set of non-zero octoni
 A key property of a Moufang loop $L$ is that any subloop $\langle x,y\rangle < L$ generated by a pair of elements $x,y$ is in fact a group. 
 As a corollary, powers of a \emph{single} element are well-defined, and do not require extra bracketing: $x\star (x \star x) = (x\star x) \star x =: x^3$, for example. 
 Additionally, the left and right inverses \emph{always} agree in a Moufang loop, so that for each $x\in L$, there is a unique $x^{-1}$ such that $x\star x^{-1} = x^{-1}\star x = e$. 
-Importantly for us, code loops, defined below as a special case of the construction of $\FF\times_\alpha V$, turn out to be Moufang.
+Important for us, code loops, defined below as a special case of the construction of $\FF\times_\alpha V$, turn out to be Moufang.
 
 \begin{example}\label{example:m16}
-Let $V= (\FF_2)^3$. The 16-element Moufang loop $M := M_{16}(C_2\times C_4)$ of \cite[Theorem 2]{Chein} is isomorphic to $\FF_2 \times_\mu V$,  arising from a twisted cocycle $\mu\colon V\times V\to\FF_2$ given by the $8\times 8$ array in Figure~\ref{fig:cocycle for M}:
+Let $V= (\FF_2)^3$. The 16-element Moufang loop $M := M_{16}(C_2\times C_4)$ of \cite[Theorem 2]{Chein} is isomorphic to $\FF_2 \times_\mu V$,  arising from a twisted cocycle $\mu\colon V\times V\to\FF_2$ given by the $8\times 8$ array in Figure~\ref{fig:cocycle for M}.
 \medskip
 \begin{figure}[!hb]
 \begin{center}
@@ -193,8 +194,8 @@ Let $V= (\FF_2)^3$. The 16-element Moufang loop $M := M_{16}(C_2\times C_4)$ of 
 \end{figure}
 
 
-Notice in particular that the first four columns/rows correspond to the subgroup $U\subset V$ generated by $100$ and $010$, and that the restriction of $\mu$ to $U\times U$ is identically zero (i.e.\ white). 
-This means that the \emph{restriction} $M\big|_U < M$ (the subloop of $M$ whose elements are mapped to $U$ by $M \to V$) is isomorphic to the direct product $\FF_2\times U$, and in particular a group.
+Notice in particular that the first four columns/rows correspond to the subgroup $U\subset V$ generated by $100$ and $010$, and that the restriction of $\mu$ to $U\times U$ is identically zero (i.e., white). 
+This means that the \emph{restriction} $M\big|_U < M$ (the subloop of $M$ whose elements are mapped to $U$ by $M \to V$) is isomorphic to the direct product $\FF_2\times U$, and in particular is a group.
 \end{example}
 
 
@@ -258,7 +259,7 @@ The (extended binary) Golay code $\cG \subset (\FF_2)^{24}$ is the span of the f
 	 011011000001111011111111
 	 \end{array}
 \]
-This basis is different to the more usual ones (e.g.\ \cite[Figure 3.4]{SPLAG}), which can be taken as the rows of a $12\times 24$ matrix whose left half is the $12\times 12$ identity matrix.
+This basis is different from the more usual ones (e.g., \cite[Figure 3.4]{SPLAG}), which can be taken as the rows of a $12\times 24$ matrix whose left half is the $12\times 12$ identity matrix.
 Our basis, however, allows us to demonstrate some interesting properties.
 \end{example}
 
@@ -271,11 +272,11 @@ Thus for words $v,w$ in a doubly even code, both $\frac14|v|$ and $\frac12|v\AND
 
 \begin{definition}[Griess \cite{Griess}]
 Let $\cC$ be a doubly even code. 
-A \emph{code cocycle}\footnote{What we call a code cocycle, Griess actually calls a `factor set'. Given that a code cocycle is an example of a twisted cocycle, we prefer a name that indicates this.} is a function $\theta\colon \cC \times \cC \to \FF_2$ satisfying the identities
+A \emph{code cocycle}\footnote{What we call a code cocycle, Griess actually calls a ``factor set''. Given that a code cocycle is an example of a twisted cocycle, we prefer a name that indicates this.} is a function $\theta\colon \cC \times \cC \to \FF_2$ satisfying the identities
 \begin{align}
-& \theta(v,w)-\theta(u+v,w)+\theta(u,v+w)-\theta(u,v) =|u\AND v \AND w| \pmod 2 \label{eq: code cocycle 1}\\
-& \theta(v,w)+\theta(w,v) = {}  \tfrac12|v\AND w| \pmod 2 \label{eq: code cocycle 2}\\
-& \theta(v,v) = {}  \tfrac14|v| \pmod 2\label{eq: code cocycle 3}
+& \theta(v,w)-\theta(u+v,w)+\theta(u,v+w)-\theta(u,v) =|u\AND v \AND w| \pmod 2; \label{eq: code cocycle 1}\\
+& \theta(v,w)+\theta(w,v) = {}  \tfrac12|v\AND w| \pmod 2; \label{eq: code cocycle 2}\\
+& \theta(v,v) = {}  \tfrac14|v| \pmod 2.\label{eq: code cocycle 3}
 \end{align}
 A \emph{code loop} is then a loop arising as $\FF_2\times_\theta \cC$ (up to isomorphism) for some code cocycle $\theta$.
 \end{definition}
@@ -300,11 +301,11 @@ The set of all possible functions $\cC\times \cC \to \FF_2$ has $2^{2^k}$ elemen
 The algorithm that Griess describes in the proof of \cite[Theorem 10]{Griess} to construct code cocycles for a code $\cC$ takes as input an ordered  basis $\{b_0,\ldots,b_{k-1}\}$ for $\cC$. 
 The code cocycle is then built up inductively over larger and larger subspaces $V_i = \Span\{b_1,\ldots,b_i\}$.%, at each stage applying the identities to define the growing code cocycle on a larger domain.
 
-However, the description by Griess is more of an outline, using steps like `determine the cocycle on such-and-such subset using identity X', where X refers to one of (\ref{eq: code cocycle 1}), (\ref{eq: code cocycle 2}), (\ref{eq: code cocycle 3}), or corollaries of these. We have reconstructed the process in detail in Algorithm~\ref{Griess algo}.
+However, the description by Griess is more of an outline, using steps like ``determine the cocycle on such-and-such subset using identity X,'' where X refers to one of (\ref{eq: code cocycle 1}), (\ref{eq: code cocycle 2}), (\ref{eq: code cocycle 3}), or corollaries of these. We have reconstructed the process in detail in Algorithm~\ref{Griess algo}.
 
 
 We implemented Algorithm~\ref{Griess algo} in the language Go \cite{RN_GH}, together with diagnostic tests, for instance to verify the Moufang property.
-The output of the algorithm is the code cocycle, encoded as a matrix of ones and zeroes, and can be displayed as an array of black and white pixels.
+The output of the algorithm is the code cocycle, encoded as a matrix of ones and zeros, and can be displayed as an array of black and white pixels.
 For the Golay code this image consists of slightly over 16 million pixels.
 
 As a combinatorial object, the code cocycle $\theta\colon \cG \times \cG\to \FF_2$ constructed from Algorithm~\ref{Griess algo} using the basis in Example~\ref{example:Golay} is too large and unwieldy to examine for any interesting structure. 
@@ -316,7 +317,7 @@ Let $\cC$ be a doubly even code, $\theta$ a code cocycle on it, and $\cC = V\opl
 Then for $v_1,v_2\in V$ and $w_1,w_2\in W$,
 \begin{align}\label{eq:theformula}
 	\theta(v_1\Plus w_1,v_2\Plus w_2)	
-		& = \theta(v_1,v_2)  + \theta(w_1,w_2) + \theta(v_1,w_1) \\
+		 =& \theta(v_1,v_2)  + \theta(w_1,w_2) + \theta(v_1,w_1) \\
 		&+ \theta(w_2,v_2) + \theta(v_1\Plus v_2,w_1\Plus w_2) \nonumber \\
 							& + \tfrac12|v_2\AND(w_1\Plus w_2)| + |v_1\AND v_2 \AND (w_1\Plus w_2)| \nonumber \\
 							&+|w_1\AND w_2 \AND v_2| + \left|v_1\AND w_1 \AND (v_2 \Plus  w_2)\right| \pmod 2\,. \nonumber
@@ -340,12 +341,12 @@ We apply the identity (\ref{eq: code cocycle 1}) three times and then the identi
 	 =&\ \theta(v_1,w_1) + \big\{ \theta(v_1,v_2) + \theta(v_1+v_2,w_1+w_2)) \\ 
 	 & +  |v_1\AND v_2 \AND (w_1+w_2)| \big\} \\
 	 & + \big\{\theta(w_1,w_2) + \theta(w_2,v_2) + |w_1\AND w_2\AND v_2| \big\} \\
-	 & + |v_1\AND w_1\AND(v_2+w_2)| + \tfrac12|v_2\AND (w_1+w_2)| \qedhere
+	 & + |v_1\AND w_1\AND(v_2+w_2)| + \tfrac12|v_2\AND (w_1+w_2)|. \qedhere
 \end{split}
 \end{align*}
 \end{proof}
 
-Observe that in Lemma~\ref{lemma:formula lemma}, on the right hand side of (\ref{eq:theformula}), the code cocycle $\theta$ is only ever evaluated on vectors from the subset $V \cup W \subset \cC$.
+Observe that in Lemma~\ref{lemma:formula lemma}, on the right-hand side of (\ref{eq:theformula}), the code cocycle $\theta$ is only ever evaluated on vectors from the subset $V \cup W \subset \cC$.
 This means we can throw away the rest of the array and still reconstruct arbitrary values of $\theta$ using (\ref{eq:theformula}).
 If we assume that $\cC$ is $2k$-dimensional, and that $V$ and $W$ are both $k$-dimensional, then the domain of the restricted $\theta$ has $(2^k+2^k - 1)^2 = 2^{2(k+1)} - 2^{k+2} + 1 = O((2^k)^2)$ elements. 
 Compared to the full domain of $\theta$, which has $2^{2k}\times 2^{2k} = (2^k)^4$ elements, this is roughly a square-root saving.
@@ -353,7 +354,7 @@ Compared to the full domain of $\theta$, which has $2^{2k}\times 2^{2k} = (2^k)^
 And, now it should be clear why the Golay code basis in Example~\ref{example:Golay} was partitioned into two lists of six vectors: we can reconstruct all $16,777,216$ values of the resulting code cycle $\theta$, and hence the Parker loop multiplication, from a mere $2^{14} - 2^8 + 1 = 16,129$ values.
 The span of the left column of vectors in Example~\ref{example:Golay} is the subspace $V\subset \cG$, and the span of the right column of vectors is $W\subset \cG$.
 
-The top left quadrant of Figure~\ref{fig:Parker cocycle} then contains to the restriction of $\theta$ to $V\times V$, and the bottom right quadrant the restriction to $W\times W$. 
+The top left quadrant of Figure~\ref{fig:Parker cocycle} then contains the restriction of $\theta$ to $V\times V$, and the bottom right quadrant the restriction to $W\times W$. 
 The off-diagonal quadrants contain the values of $\theta$ restricted to $V\times W$ and $W\times V$.
 
 \begin{figure}[ht]
@@ -368,15 +369,15 @@ From Figure~\ref{fig:Parker cocycle} we can immediately see that the restriction
 Moreover, the restriction of $\cP\big|_W$ is the direct product $(\FF_2)^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
 This is because what was a single pixel in Figure~\ref{fig:cocycle for M} is now an $8\times 8$ block of pixels in Figure~\ref{fig:Parker cocycle}.
 
-\section{Discussion and comparison}
+\section{Discussion and comparison.}
 
 The Parker loop $\cP$ is a sporadic object that has spawned a small industry trying to understand and construct code loops in general, as a class of Moufang loops that are fairly easy to describe.
 
-Aside from the description by Griess using code cocycles, there was an unpublished description by Parker, an unpublished thesis \cite{Johnson}, characterisations as loops with specified commutators and associators \cite{CheinGoodaire}, an iterative construction using centrally twisted products \cite{Hsu}, and a construction using groups with triality \cite{Nagy}. 
-The LOOPS library \cite{LOOPS} for software package GAP \cite{GAP4} contains all the code loops of order $64$ and below, although ``the package is intended primarily for quasigroups and loops of small order, say up to $1000$''.
-Even the more recent \cite{OBrien_Vojtechovsky}, which classifies code loops up to order $512$ in order to add them to the LOOPS package, falls short of the Parker loop's $8192$ elements; the authors say ``our work suggests that it will be difficult to extend the classification of code loops beyond order $512$''.
+Aside from the description by Griess using code cocycles, there was an unpublished description by Parker, an unpublished thesis \cite{Johnson}, characterizations as loops with specified commutators and associators \cite{CheinGoodaire}, an iterative construction using centrally twisted products \cite{Hsu}, and a construction using groups with triality \cite{Nagy}. 
+The LOOPS library \cite{LOOPS} for software package GAP \cite{GAP4} contains all the code loops of order $64$ and below, although ``the package is intended primarily for quasigroups and loops of small order, say up to $1000$.''
+Even the more recent \cite{OBrien_Vojtechovsky}, which classifies code loops up to order $512$ in order to add them to the LOOPS package, falls short of the Parker loop's $8192$ elements; the authors say ``our work suggests that it will be difficult to extend the classification of code loops beyond order $512$.''
 In principle, there is nothing stopping the construction of $\cP$ in LOOPS, but it will essentially be stored as a multiplication table, which would comprise $67,108,864$ entries, each of which is a $13$-bit element label.
-The paper \cite{Morier-Genoud_Ovsienko} describes an algebraic formula for a code cocycle that will build the Parker loop, as a combination of the recipe in the proof of Proposition~6.6 and the generating function in Proposition~9.2.
+The paper \cite{Morier-Genoud_Ovsienko} describes an algebraic formula for a code cocycle that will build the Parker loop, as a combination of the recipe in the proof of Proposition~6.6 and the generating function in Proposition~9.2 appearing there.
 This formula is a polynomial with $330$ cubic terms and $12$ quadratic terms in $24$ variables, being coefficients of basis vectors of $\cG$. 
 To compare, combined with the small amount of data in Figure~\ref{fig:Parker cocycle} together with a labelling of rows/columns by words of the Golay code, Lemma~\ref{lemma:formula lemma} only requires 9 terms, of which four are cubic and the rest come from the $16,129$ stored values of $\theta$.
 Large-scale computation in large code loops requires optimising the loop product, and we have found a space/time trade-off that must surely approach the more effective end of the spectrum.
