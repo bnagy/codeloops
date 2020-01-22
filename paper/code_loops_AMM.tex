@@ -79,14 +79,14 @@ The elements of $Q_8$ satisfy the identities
 \[
 	i^2 = j^2 = k^2 = -1, \quad ij=k.
 \]
-There is a surjective group homomorphism $\pi\colon Q_8 \to \FF_2 \times \FF_2 = V_4$, sending $i$ to $(1,0)$ and $j$ to $(0,1)$, and the kernel of $\pi$ is the subgroup $\{1,-1\}\simeq \FF_2$.
+There is a surjective group homomorphism $\pi\colon Q_8 \to \FF_2 \times \FF_2 =: V_4$ (the Klein 4-group), sending $i$ to $(1,0)$ and $j$ to $(0,1)$, and the kernel of $\pi$ is the subgroup $\{1,-1\}\simeq \FF_2$.
 Moreover, this kernel is the \emph{center} of $Q_8$, the set of all elements that commute with every other element of the group. This makes $Q_8$ an example of a \emph{central extension}: $\FF_2\to Q_8 \to V_4$.
 
 Now $Q_8$ is a nonabelian group, but both $\FF_2$ and $V_4$ are abelian.
 One might think that it shouldn't be possible to reconstruct $Q_8$ from the latter two groups, but it is! 
 That is, if we are given some extra information that uses only the two abelian groups.
 There is a function $s\colon V_4 \to Q_8$, sending $(0,0)$ to $1$, $(1,0)$ to $i$, $(0,1)$ to $j$, and $(1,1)$ to $k$.
-This almost looks like a group homomorphism, but it is not, as $(1,0) + (1,0) = (0,0)$ in $V$, but $s(1,0)s(0,1) = i^2 \not= 1 = s(0,0)$ in $Q_8$.
+This almost looks like a group homomorphism, but it is not, as $(1,0) + (1,0) = (0,0)$ in $V$, but $s(1,0)s(1,0) = i^2 \not= 1 = s(0,0)$ in $Q_8$.
 We can measure the failure of $s$ to be a group homomorphism by considering the two-variable function
 \[
 	d\colon V_4 \times V_4 \to \FF_2
