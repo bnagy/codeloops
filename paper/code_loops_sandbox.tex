@@ -46,17 +46,18 @@ As a byproduct one can reconstruct the multiplication in the Parker loop from a 
 
 \section{Introduction.}
 
-Associativity is one of the standard axioms for groups, and at first it can be difficult to imagine what algebraic structures could be like that are not associative. 
-However, we are all familiar with several nonassociative operations, for instance subtraction and exponentiation: $1-(1-2) \neq (1-1)-2$ and $(2^3)^2 \neq 2^{(3^2)}$. 
-However, subtraction is of course a combination of negation and addition, so is in some sense not so interesting, and exponentiation has neither a two-sided inverse or identity element. 
-One class of nonassociative structures that are relatively widely studied are \emph{loops}, which are more or less ``groups without associativity'' (more techically: quasigroups with identity), having an identity element and inverses.
-We will see examples later of a particular class of loops known as \emph{code loops}. 
+Associativity is one of the standard axioms for groups, along with inverses and the identity element.
+At first it can be difficult to imagine what algebraic structures could be like that are not associative. 
+However, we are all familiar with the nonassociative operation of exponentiation:  $(2^3)^2 \neq 2^{(3^2)}$, for example
+However, exponentiation is an ill-behaved binary operation, with neither (a two-sided) inverse nor identity element, hence very much unlike a group. 
+One class of nonassociative structures as close to being a group as possible, but lacking associativity, are \emph{Moufang loops}, which are more or less ``groups without full associativity'' (more techically: unital quasigroups, satisfying the Moufang identities), having an identity element and two-sided inverses.
+This article is concerned with a special class of Moufang loops known as \emph{code loops}.
 
 The first published example of a code loop appeared as a step in John Conway's construction of the Monster sporadic simple group \cite{Conway}. 
-The loop Conway used originally appeared in an unpublished manuscript by Richard Parker.
-A general study of code loops was later then made by Robert Griess \cite{Griess}, who gave them their name, as they can be built from doubly-even binary codes. The Parker loop is then constructed by starting with the famous extended Golay code.
+This loop originally appeared in an unpublished manuscript by Richard Parker.
+A general study of loops of this type was later then made by Robert Griess \cite{Griess}, who gave them their name, as they can be built from doubly-even binary codes. The Parker loop is then constructed by starting with the famous extended Golay code.
 Griess also proved the existence of code loops by an algorithmic construction, which we adopt below.
-More recent approaches will be discussed below in section~\ref{sec:discussion}.
+More recent approaches will be discussed in section~\ref{sec:discussion}.
 
 Note, however, that both Conway's and Greiss's treatment of the Parker loop is rather implicit. The point of the present paper is to give a concrete and efficient approach to code loops in general, and the Parker loop in particular. Since the latter has $8192$ elements, each of which is described by $13$ bits, the multiplication table is essentially a 104MB lookup tabel with approximately 16 million entries.
 
