@@ -32,7 +32,7 @@ func main() {
 	vsW := codeloops.VectorSpace(w) // [1:] // we don't want the zero vector at the start
 	alpha = append(vsV, vsW...)
 
-	alphaLen = alphaLen / 2
+	//alphaLen = alphaLen / 2
 	// Set up image size
 	imgInner := alphaLen * PIXEL
 	imgInnerf := float64(imgInner)
