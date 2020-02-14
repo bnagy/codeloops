@@ -43,8 +43,9 @@
 
 \begin{abstract}
 The Parker loop is a central extension of the extended binary Golay code. It the prototypical example of a general class of nonassociative structures known as \emph{code loops}, which have been studied from a number of different algebraic and combinatorial perspectives.
-This expository article aims also to highlight an experimental approach to computing in code loops, by a combination of a small amount of precomputed information and making use of the rich identities that code loops' twisted cocycles satisfy.
-As a byproduct we demonstrate that it is possible one can reconstruct the multiplication in the Parker loop from a mere fragment of its twisted cocycle, and we have found relatively large subspaces of the Golay code over which the Parker loop splits as a direct product.
+This expository article aims to highlight an experimental approach to computing in code loops, by a combination of a small amount of precomputed information and making use of the rich identities that code loops' twisted cocycles satisfy.
+As a byproduct we demonstrate that one can reconstruct the multiplication in the Parker loop from a mere fragment of its twisted cocycle. 
+We also give relatively large subspaces of the Golay code over which the Parker loop splits as a direct product.
 \end{abstract}
 
 
@@ -53,13 +54,13 @@ As a byproduct we demonstrate that it is possible one can reconstruct the multip
 Associativity is one of the standard axioms for groups, along with inverses and the identity element.
 At first it can be difficult to imagine what algebraic structures could be like that are \emph{not} associative. 
 However, we are all familiar with the nonassociative operation of exponentiation:  $(2^3)^{\!{}^2} \neq 2^{(3^2)}$, for example.
-However, exponentiation is an ill-behaved binary operation, with neither (a two-sided) inverse nor identity element, hence very much unlike a group. 
+But exponentiation is an ill-behaved binary operation, with neither (a two-sided) inverse nor identity element, hence very much unlike a group. 
 One class of nonassociative structures as close to being a group as possible are \emph{Moufang loops}, which are more or less ``groups without full associativity'', having an identity element and two-sided inverses.
-This article is concerned with a special class of Moufang loops now known as \emph{code loops}.
+This article is concerned with a special class of Moufang loops now known as \emph{code loops}, which have curious connections to sporadic finite simple groups \cite{Conway}, \cite[\S 7]{Griess87}.
 
 The first published example of a code loop appeared as a step in John Conway's construction of the Monster sporadic simple group \cite{Conway}. 
 That loop originally appeared in an unpublished manuscript by Richard Parker.
-A general study of loops of this type was then later made by Robert Griess \cite{Griess}, who gave them their name, as they can be built from doubly-even binary codes. 
+A general study of loops of this type was then later made by Robert Griess \cite{Griess}, who named them, based on the fact that they can be built from doubly-even binary codes. 
 For example, the Parker loop $\cP$ is then constructed by starting with the famous extended Golay code.
 Griess also proved the existence of code loops by an algorithmic construction, which we adopt below.
 (More recent approaches will be discussed in section~\ref{sec:discussion}.)
@@ -325,7 +326,7 @@ The \emph{Hamming (8,4) code} is the subspace $\mathcal{H} \subset (\FF_2)^8$ sp
 and is doubly even.
 \end{example}
 
-A more substantial example is given by the Golay code.
+A more substantial example of a doubly-even code is the following.
 
 \begin{example}\label{example:Golay}
 The (extended binary) Golay code $\cG \subset (\FF_2)^{24}$ is the span of the following (row) vectors, denoted $b_1,\ldots,b_6$ (left) and $b_7,\ldots,b_{12}$ (right):
@@ -448,7 +449,7 @@ Compared to the full domain of $\theta$, which has $2^{2k}\times 2^{2k} = (2^k)^
 However, the rationale for choosing the subspaces $V$ and $W$ is that one is looking for a reduction in the \emph{entropy} (roughly, the disorderedness) of the restricted code cocycle. 
 This is true, even if the size of $V\cup W$ is not minimized by choosing $V$ and $W$ to have dimension $(\dim\cC)/2$ (or as close as possible).
 
-And, now it should be clear why the Golay code basis in Example~\ref{example:Golay} was partitioned into two lists of six vectors: we can reconstruct all $16\,777\,216$ values of the resulting code cycle $\theta$, and hence the Parker loop multiplication, from a mere $2^{14} - 2^8 + 1 = 16\,129$ values.
+Now it should be clear why the Golay code basis in Example~\ref{example:Golay} was partitioned into two lists of six vectors: we can reconstruct all $16\,777\,216$ values of the resulting code cycle $\theta$, and hence the Parker loop multiplication, from a mere $2^{14} - 2^8 + 1 = 16\,129$ values.
 The span of the left column of vectors in Example~\ref{example:Golay} is the subspace $V\subset \cG$, and the span of the right column of vectors is $W\subset \cG$.
 
 The top left quadrant of Figure~\ref{fig:Parker cocycle} then contains the restriction of $\theta$ to $V\times V$, and the bottom right quadrant the restriction to $W\times W$. 
@@ -463,7 +464,7 @@ ancillary file. The order of the row/column labels is $\underline{0},b_1,b_2,b_1
 \label{fig:Parker cocycle}
 \end{figure}
 
-From Figure~\ref{fig:Parker cocycle} and (\ref{eq:loop_extension_prod}) we can see that the restriction of the Parker loop $\cP\big|_V$ is a direct product (hence is a group), as $\theta\big|_{V\times V}$ is identically zero. 
+From Figure~\ref{fig:Parker cocycle} and the formula (\ref{eq:loop_extension_prod}) we can see that the restriction of the Parker loop $\cP\big|_V$ is a direct product (hence is a group), as $\theta\big|_{V\times V}$ is identically zero. 
 Moreover, the restriction of $\cP\big|_W$ is isomorphic to the direct product $(\FF_2)^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
 This is because what was a single pixel in Figure~\ref{fig:cocycle for M} is now an $8\times 8$ block of pixels in the lower right quadrant of Figure~\ref{fig:Parker cocycle}.
 
@@ -478,9 +479,9 @@ In principle, there is nothing stopping the construction of $\cP$ in LOOPS, but 
 The paper \cite{Morier-Genoud_Ovsienko} describes an algebraic formula for a code cocycle that will build the Parker loop, as a combination of the recipe in the proof of Proposition~6.6 and the generating function in Proposition~9.2 appearing there.
 This formula is a polynomial with $330$ cubic terms and $12$ quadratic terms in $24$ variables, being coefficients of basis vectors of $\cG$. 
 To compare, combined with the small amount of data in Figure~\ref{fig:Parker cocycle} together with a labelling of rows/columns by words of the Golay code, Lemma~\ref{lemma:formula lemma} only requires eight terms, of which four are cubic and the rest come from the $16\,129$ stored values of $\theta$ (the term $\theta(v_1,v_2)$ vanishes identically, for $\cP$).
-Since large-scale computation in large code loops requires optimising the binary operation, we have found a space/time trade-off that vastly improves on existing approaches.
+Since large-scale computation in large code loops (for instance in a package like LOOPS) requires optimising the binary operation, we have found a space/time trade-off that vastly improves on existing approaches.
 
-In addition to computational savings, the ability to visually explore the structure of code loops during experimentation more generally is a novel advance---the recognition of $(\FF_2)^3\times M$ inside $\cP$ was purely by inspection of the picture of the code cocyle then consulting the small list of Moufang loops of small order \cite{Chein}.
+In addition to computational savings, the ability to visually explore the structure of code loops during experimentation more generally is a novel advance---the recognition of $(\FF_2)^3\times M$ inside $\cP$ was purely by inspection of the picture of the code cocyle then consulting the (short) list of Moufang loops of small order in \cite{Chein}.
 Discovery of the basis in Example~\ref{example:Golay} occurred by walking through the spaces of bases of subcodes and working with the heuristic that more regularity in the appearance of the code cocycle is better.
 Additionally, our software flagged when subloops thus considered were in fact associative, and hence a group, leading to the discovery of the relatively large elementary subgroups $(\FF_2)^7 < \cP$ and $(\FF_2)^6 < (\FF_2)^3\times M < \cP$. 
 
@@ -560,6 +561,8 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 % \bibliography{codeloops}
 % \end{document}
 
+%%%%%%
+
 \begin{thebibliography}{10}
 \expandafter\ifx\csname urlstyle\endcsname\relax
  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
@@ -571,7 +574,6 @@ Brown, K. (1994).
 \newblock \emph{Cohomology of groups}, vol.~87 of \emph{Graduate Texts in
   Mathematics}.
 \newblock Springer-Verlag, New York.
-\newblock Corrected reprint of the 1982 original.
 
 \bibitem{Chein}
 Chein, O. (1974).
@@ -609,6 +611,13 @@ Griess, Jr., R.~L. (1986).
 \newblock Code loops.
 \newblock \emph{J. Algebra}, 100(1): 224--234.
 \newblock \doi{10.1016/0021-8693(86)90075-X}.
+
+\bibitem{Griess87}
+Griess, Jr., R.~L. (1987).
+\newblock Sporadic groups, code loops and nonvanishing cohomology.
+\newblock In: \emph{Proceedings of the {N}orthwestern conference on cohomology
+  of groups ({E}vanston, {I}ll., 1985)}, vol.~44. pp. 191--214.
+\newblock \doi{10.1016/0022-4049(87)90024-7}.
 
 \bibitem{Hsu}
 Hsu, T. (2000).
