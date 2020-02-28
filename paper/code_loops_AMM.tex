@@ -50,7 +50,7 @@
 
 \begin{abstract}
 The Moufang loop named for Richard Parker is a central extension of the extended binary Golay code. 
-It the prototypical example of a general class of nonassociative structures known as \emph{code loops}, which have been studied from a number of different algebraic and combinatorial perspectives.
+It the prototypical example of a general class of nonassociative structures known today as \emph{code loops}, which have been studied from a number of different algebraic and combinatorial perspectives.
 This expository article aims to highlight an experimental approach to computing in code loops, by a combination of a small amount of precomputed information and making use of the rich identities that code loops' twisted cocycles satisfy.
 As a byproduct we demonstrate that one can reconstruct the multiplication in Parker's loop from a mere fragment of its twisted cocycle. 
 We also give relatively large subspaces of the Golay code over which Parker's loop splits as a direct product.
@@ -67,7 +67,7 @@ One class of nonassociative structures as close to being a group as possible are
 This article is concerned with a special class of Moufang loops now known as \emph{code loops}, which have curious connections to sporadic finite simple groups \cite{Conway}, \cite[\S 7]{Griess87}.
 In particular, we consider in detail a Moufang loop $\cP$, introduced by Richard Parker, in unpublished work in the early 1980s, as the exemplar of a class of loops later shown to be equivalent to code loops \cite{Griess}.
 
-An early example of a code loop, though not identified as such, appeared in Coxeter's work on integral octonions \cite{Coxeter}, but the most striking appearance was the use of Parker's loop $\cP$ as part of John Conway's construction of the Monster sporadic simple group \cite{Conway}. 
+An early example of a code loop, though not identified as such, appeared in Coxeter's work on integral octonions \cite{Coxeter} (see, e.g., \cite[\S 2]{Griess87} for details), but the most striking appearance was the use of Parker's loop $\cP$ as part of John Conway's construction of the Monster sporadic simple group \cite{Conway}. 
 % That loop originally appeared in an unpublished manuscript by Richard Parker.
 A general study of loops of this type was subsequently made by Robert Griess \cite{Griess}, who named them, based on the fact that they can be built from doubly-even binary codes. 
 For example, Parker's loop $\cP$ is then constructed by starting with the famous extended Golay code.
@@ -82,7 +82,7 @@ The point of the present article is to give a concrete and efficient approach to
 
 Recall that the elements (or \emph{words}) in a code $\cC$, being vectors, can be combined by addition---this is a group operation and hence associative. 
 The elements of a code loop consist of a pair: a code word and one extra bit.
-The extra bit, together with $\theta$, \emph{twists} the addition so that the binary operation in the code loop is a \emph{nonassociative operation}: $(x\star y)\star z\not=x\star (y\star z)$ in general.
+The extra bit, together with $\theta$, \emph{twists} the addition so that the binary operation $\star$ in the code loop is a \emph{nonassociative operation}: $(x\star y)\star z\not=x\star (y\star z)$ in general.
 
 While addition of words in a code is performed by coordinate-wise addition in $\FF_2$ (that is, bitwise XOR), the algebraic operation in a code loop is not easily described in such an explicit way---unless one has complete knowledge of the function $\theta$.
 % The code loop operation can be reconstructed from a function $\cC \times \cC \to \FF_2$ satisfying certain identities, called a \emph{twisted cocycle}.
@@ -203,8 +203,7 @@ We denote the product $\FF_2 \times V$ of sets equipped with this binary operati
 A \emph{loop} is a set $L$ with a binary operation $\star\colon L\times L \to L$, a unit element $e\in L$ such that $e\star x = x \star e = x$ for all $x\in L$, and such that for each $z\in L$, the functions $r_z(x) = x \star z$ and $\ell_z(x)=z\star x$ are bijections $L\to L$. A \emph{homomorphism} of loops is a function preserving multiplication and the unit element.
 \end{definition}
 
-
-Informally, this means that every element $z\in L$ has a left inverse and a right inverse for the operation $\star$, and these are unique---but may be different in general. 
+The conditions on $r_x$ and $\ell_x$ mean that every element $x\in L$ has a left inverse $x_L^{-1}$ and a right inverse $x_R^{-1}$ for the operation $\star$, and these are unique---but may be different in general. 
 The following is a worthwhile exercise using the twisting function and the assumption that $\alpha(\underline{0},v)=\alpha(v,\underline{0})=0$.
 
 \begin{lemma}
@@ -420,16 +419,16 @@ ancillary file. The order of the row/column labels is $\underline{0},b_1,b_2,b_1
 \label{fig:Parker cocycle}
 \end{figure}
 
-From Figure~\ref{fig:Parker cocycle} and the formula (\ref{eq:loop_extension_prod}) we can see that the restriction of Parker's loop $\cP\big|_V$ is a direct product (hence is a group), as $\theta\big|_{V\times V}$ is identically zero. 
+From Figure~\ref{fig:Parker cocycle} and the formula (\ref{eq:loop_extension_prod}) we can see that the restriction $\cP\big|_V$ of Parker's loop is a direct product (hence is a group), as $\theta\big|_{V\times V}$ is identically zero. 
 Moreover, the restriction of $\cP\big|_W$ is isomorphic to the direct product $(\FF_2)^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
 This is because what was a single pixel in Figure~\ref{fig:cocycle for M} is now an $8\times 8$ block of pixels in the lower right quadrant of Figure~\ref{fig:Parker cocycle}.
 
 \section{Discussion and comparison.}\label{sec:discussion}
 
-Parker's loop $\cP$ is a algebraic structure that has spawned a small industry trying to understand and construct code loops in general, as they form a class of Moufang loops that are relatively easy to describe.
-Parker's original treatment of this class of Moufang loops used vector spaces $V$ over $\FF_2$ equipped with a function $V \to \FF_2$ satisfying certain conditions analogous to those in Definition~\ref{def:codeLoop}.
+Parker's loop $\cP$ is an algebraic structure that has spawned a small industry trying to understand and construct code loops in general, as they form a class of Moufang loops that are relatively easy to describe.
+Parker's original treatment of this class of Moufang loops used vector spaces $V$ over $\FF_2$ equipped with a function $V \to \FF_2$ satisfying certain conditions analogous to those in Definition~\ref{def:codeLoop} (see \cite[Definition~13]{Griess}).
 
-Aside from the description by Griess using code cocycles, there was an unpublished description by Parker, an unpublished thesis \cite{Johnson}, characterizations as loops with specified commutators and associators \cite{CheinGoodaire}, an iterative construction using centrally twisted products \cite{Hsu}, and a construction using groups with triality \cite{Nagy}. 
+Aside from Parker's approach and the description by Griess using code cocycles, there was an unpublished thesis \cite{Johnson}, characterizations as loops with specified commutators and associators \cite{CheinGoodaire}, an iterative construction using centrally twisted products \cite{Hsu}, and a construction using groups with triality \cite{Nagy}. 
 The LOOPS library \cite{LOOPS} for software package GAP \cite{GAP4} contains all the code loops of order $64$ and below, although ``the package is intended primarily for quasigroups and loops of small order, say up to $1000$.''
 Even the more recent \cite{OBrien_Vojtechovsky}, which classifies code loops up to order $512$ in order to add them to the LOOPS package, falls short of the $8192$ elements of Parker's loop; the authors say ``our work suggests that it will be difficult to extend the classification of code loops beyond order $512$.''
 In principle, there is nothing stopping the construction of $\cP$ in LOOPS, but it will essentially be stored as a multiplication table, which would comprise $67\,108\,864$ entries, each of which is a $13$-bit element label.
@@ -442,7 +441,7 @@ In addition to computational savings, the ability to visually explore the struct
 Discovery of the basis in Example~\ref{example:Golay} occurred by walking through the spaces of bases of subcodes and working with the heuristic that more regularity in the appearance of the code cocycle is better.
 Additionally, our software flagged when subloops thus considered were in fact associative, and hence a group, leading to the discovery of the relatively large elementary subgroups $(\FF_2)^7 < \cP$ and $(\FF_2)^6 < (\FF_2)^3\times M < \cP$. 
 
-Finally, one can also remark that because of the identity (\ref{eq: code cocycle 2}), one can replace the formula in Lemma~\ref{lemma:formula lemma} by one that is only ever evaluated on $V^2$, $W^2$ or $V\times W$, with just one more term. This allows the reconstruction the top right quadrant of Figure~\ref{fig:Parker cocycle} from the bottom left quadrant. 
+Finally, one can also remark that because of the identity (\ref{eq: code cocycle 2}), one can replace the formula in Lemma~\ref{lemma:formula lemma} by one that is only ever evaluated on $V^2$, $W^2$, or $V\times W$, with just one more term. This allows the reconstruction the top right quadrant of Figure~\ref{fig:Parker cocycle} from the bottom left quadrant. 
 Thus one can describe Parker's loop as being generated by the subloops $(\FF_2)^7$ and $(\FF_2)^3\times M$, with relations coming from the information contained in the bottom left quadrant of Figure~\ref{fig:Parker cocycle}, and the formulas (\ref{eq: code cocycle 2}) and (\ref{eq:theformula}).
 The apparent structure in that bottom left quadrant is intriguing, and perhaps indicative of further simplifications; this will be left to future work.
 
@@ -602,9 +601,9 @@ Moufang, R. (1935).
 \newblock \url{doi.org/10.1007/BF01448037}
 
 \bibitem{RN_GH} %Nagy, B., Roberts, D.~M. %% Uncomment for final
-{library authors} (2019).
+{[library authors redacted]} (2019).
 \newblock \texttt{codeloops} library.
-\newblock \url{adelaide.figshare.com/s/e1cf101636659583a124} 
+\newblock Anonymously available from \url{adelaide.figshare.com/s/e1cf101636659583a124} 
 % GitHub repository, (2019) \url{https://github.com/bnagy/codeloops} %% Uncomment for final
 
 \bibitem{Nagy}
