@@ -42,9 +42,7 @@
 
 \title{(Re)constructing Code Loops}
 \markright{Reconstructing Code Loops}
-\author{%
-Ben Nagy and David Michael Roberts
-}
+\author{Ben Nagy and David Michael Roberts}
 
 \maketitle
 
@@ -68,7 +66,6 @@ This article is concerned with a special class of Moufang loops now known as \em
 In particular, we consider in detail a Moufang loop $\cP$, introduced by Richard Parker, in unpublished work in the early 1980s, as the exemplar of a class of loops later shown to be equivalent to code loops \cite{Griess}.
 
 An early example of a code loop, though not identified as such, appeared in Coxeter's work on integral octonions \cite{Coxeter} (see, e.g., \cite[\S 2]{Griess87} for details), but the most striking appearance was the use of Parker's loop $\cP$ as part of John Conway's construction of the Monster sporadic simple group \cite{Conway}. 
-% That loop originally appeared in an unpublished manuscript by Richard Parker.
 A general study of loops of this type was subsequently made by Robert Griess \cite{Griess}, who named them, based on the fact that they can be built from doubly-even binary codes. 
 For example, Parker's loop $\cP$ is then constructed by starting with the famous extended Golay code.
 Griess also proved the existence of code loops by an algorithmic construction, which we adopt below.
@@ -85,7 +82,6 @@ The elements of a code loop consist of a pair: a code word and one extra bit.
 The extra bit, together with $\theta$, \emph{twists} the addition so that the binary operation $\star$ in the code loop is a \emph{nonassociative operation}: $(x\star y)\star z\not=x\star (y\star z)$ in general.
 
 While addition of words in a code is performed by coordinate-wise addition in $\FF_2$ (that is, bitwise XOR), the algebraic operation in a code loop is not easily described in such an explicit way---unless one has complete knowledge of the function $\theta$.
-% The code loop operation can be reconstructed from a function $\cC \times \cC \to \FF_2$ satisfying certain identities, called a \emph{twisted cocycle}.
 It is the computation and presentation of such twisted cocycles that will mainly concern us in this article, using Griess's method \cite[proof of Theorem 10]{Griess}.
 As a result, we will observe some curious features of Parker's loop, obtained via experimentation and, it seems, previously unknown.
 
@@ -155,7 +151,7 @@ An alternative visualization is given in Figure~\ref{fig:cocycle for q8}.
 
 \begin{figure}[!ht]
 \begin{center}
-\includegraphics[height=2.5cm]{quaternion_cocyc} %%% Want this to be a pdf image, not png
+\includegraphics[height=2.5cm]{quaternion_cocyc}
 \end{center}
 \caption{A $4\times4$ array giving the values of the cocycle $d\colon V_4\times V_4\to \FF_2$, with white = $0$, black = $1$. The order of the row/column labels is $00$, $10$, $01$, $11$.}
 \label{fig:cocycle for q8}
@@ -235,7 +231,7 @@ Let $V= (\FF_2)^3$. The 16-element Moufang loop $M := M_{16}(C_2\times C_4)$ of 
 \medskip
 \begin{figure}[!ht]
 \begin{center}
-\includegraphics[width=0.25\textwidth]{m16.png}
+\includegraphics[width=0.25\textwidth]{m16}
 \end{center}
 \caption{Twisted cocycle for the Moufang loop $M$ of Example~\ref{example:m16}; white = $0$, black = $1$. The order of the row/column labels is $000$, $100$, $010$, $110$, $001$, $101$, $011$, $111$. }\label{fig:cocycle for M}
 \end{figure}
@@ -273,15 +269,12 @@ A code $\cC \subset (\FF_2)^n$ is \emph{doubly even} if for every word $v\in \cC
 \begin{example}\label{example:Hamming}
 The \emph{Hamming (8,4) code} is the subspace $\mathcal{H} \subset (\FF_2)^8$ spanned by the four row vectors
 \[
-% \begingroup % keep the change local
-% \setlength\arraycolsep{1pt}
 \begin{array}{c}
 1\,0\,0\,0\,0\,1\,1\,1\\
 0\,1\,0\,0\,1\,0\,1\,1\\
 0\,0\,1\,0\,1\,1\,0\,1\\
 0\,0\,0\,1\,1\,1\,1\,0
 \end{array}
-% \endgroup
 \]
 and is doubly even.
 \end{example}
@@ -346,7 +339,7 @@ As part of \cite[Theorem 10]{Griess}, Griess proves that all code cocycles for a
 \section{Griess's algorithm and its output.}
 
 The algorithm that Griess describes in the proof of \cite[Theorem 10]{Griess} to construct code cocycles for a code $\cC$ takes as input an ordered  basis $\{b_0,\ldots,b_{k-1}\}$ for $\cC$. 
-A code cocycle is then built up inductively over larger and larger subspaces $V_i = \Span\{b_1,\ldots,b_i\}$.%, at each stage applying the identities to define the growing code cocycle on a larger domain.
+A code cocycle is then built up inductively over larger and larger subspaces $V_i = \Span\{b_1,\ldots,b_i\}$.
 
 However, the description by Griess is more of an outline, using steps like ``determine the cocycle on such-and-such subset using identity X,'' where X refers to one of (\ref{eq: code cocycle 1}), (\ref{eq: code cocycle 2}), (\ref{eq: code cocycle 3}), or corollaries of these. We have reconstructed the process in detail in Algorithm~\ref{Griess algo}.
 
@@ -411,10 +404,9 @@ The top left quadrant of Figure~\ref{fig:Parker cocycle} then contains the restr
 The off-diagonal quadrants contain the values of $\theta$ restricted to $V\times W$ and $W\times V$.
 \begin{figure}[!b]
 \begin{center}
-\includegraphics[width=0.7\textwidth]{alpha_awesum.png}
+\includegraphics[width=0.7\textwidth]{alpha_awesum}
 \end{center}
-\caption{The restriction of the code cocycle $\theta$ for Parker's loop to $(V\cup W)^2$. A machine-readable version is available in \cite{RN_GH} or as an %arXiv
-online supplement to this article. The order of the row/column labels is $\underline{0},b_1,b_2,b_1+b_2,b_3,\ldots, b_1+\cdots +b_6$, $b_7,b_8,b_7+b_8,\ldots,b_7+\cdots + b_{12}$.}
+\caption{The restriction of the code cocycle $\theta$ for Parker's loop to $(V\cup W)^2$. A machine-readable version is available in \cite{RN_GH} or as an online supplement to this article. The order of the row/column labels is $\underline{0},b_1,b_2,b_1+b_2,b_3,\ldots, b_1+\cdots +b_6$, $b_7,b_8,b_7+b_8,\ldots,b_7+\cdots + b_{12}$.}
 \label{fig:Parker cocycle}
 \end{figure}
 From Figure~\ref{fig:Parker cocycle} and formula (\ref{eq:loop_extension_prod}) we can see that the restriction $\cP\big|_V$ of Parker's loop is a direct product (hence is a group), as $\theta\big|_{V\times V}$ is identically zero. 
@@ -443,7 +435,6 @@ Finally, one can also remark that because of the identity (\ref{eq: code cocycle
 Thus one can describe Parker's loop as being generated by the subloops $(\FF_2)^7$ and $(\FF_2)^3\times M$, with relations coming from the information contained in the bottom left quadrant of Figure~\ref{fig:Parker cocycle}, and the formulas (\ref{eq: code cocycle 2}) and (\ref{eq:theformula}).
 The apparent structure in that bottom left quadrant is intriguing, and perhaps indicative of further simplifications; this will be left to future work.
 
-% \newpage
 
 \begin{algorithm}[!hb]
 \small
@@ -506,17 +497,6 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 DMR is supported by the Australian Research Council's Discovery Projects scheme, (project number DP180100383), funded by the Australian Government.
 \end{acknowledgment}
 
-% \newpage
-
-% %% For generating biblography using bibtex
-% %% Needs tweaking due to unofficial .bst file
-
-% \bibliographystyle{pseudo_amm}
-% \bibliography{codeloops}
-% \end{document}
-
-%%%%%%
-
 \begin{thebibliography}{10}
 
 
@@ -548,7 +528,7 @@ Conway, J.~H. (1985).
 Conway, J.~H., Sloane, N. J.~A. (1999).
 \newblock \emph{Sphere Packings, Lattices and Groups}, 3rd ed. Grundlehren der Mathematischen Wissenschaften, vol. 290.
 \newblock New York: Springer-Verlag.
-% \newblock With additional contributions by E. Bannai, R. E. Borcherds, J. Leech, S. P. Norton, A. M. Odlyzko, R. A. Parker, L. Queen and B. B. Venkov.
+
 
 \bibitem{Coxeter}
 Coxeter, H.\ S.\ M. (1946).
@@ -600,8 +580,7 @@ Moufang, R. (1935).
 
 \bibitem{RN_GH} Nagy, B., Roberts, D.~M. (2019).
 \newblock \texttt{codeloops} library.
-\newblock %Anonymously available from \url{adelaide.figshare.com/s/e1cf101636659583a124} 
-(2019) \url{github.com/bnagy/codeloops} %% Uncomment for final
+\newblock (2019) \url{github.com/bnagy/codeloops} 
 
 \bibitem{Nagy}
 Nagy, G.~P. (2008).
@@ -624,7 +603,7 @@ O'Brien, E.~A., Vojt\v{e}chovsk\'{y}, P. (2017).
 
 \end{thebibliography}
 
-%% Uncomment this for final version
+
 
 \begin{biog}
 \item[Ben Nagy] is an MPhil.\ candidate at the University of Adelaide, researching computational stylistics for Latin Poetry.
