@@ -43,7 +43,7 @@
 \title{(Re)constructing Code Loops}
 \markright{Reconstructing Code Loops}
 \author{%
-%Ben Nagy and David Michael Roberts
+Ben Nagy and David Michael Roberts
 }
 
 \maketitle
@@ -91,7 +91,7 @@ As a result, we will observe some curious features of Parker's loop, obtained vi
 
 The function $\theta$ can be thought of as a table of bits, or even as a square image built from black and white pixels, with rows and columns indexed by elements of $\cC$. 
 One of the main results given here is that $\theta$ can be reconstructed from a much smaller subset of its values. 
-If $\dim\cC = 2k$, then while $\theta$ is a table of $(2^{2k})^2$ values, we need only store $\approx 2^{2k}$ values, and the rest can be reconstructed from equation (\ref{eq:theformula}) in Lemma~\ref{lemma:formula lemma} below. 
+If $\dim\cC = 2k$, then while $\theta$ is a table of $(2^{2k})^2$ values, we need only store roughly $2^{2k}$ values, and the rest can be reconstructed from equation (\ref{eq:theformula}) in Lemma~\ref{lemma:formula lemma} below. 
 For Parker's loop this means that instead of storing a multiplication table with approximately $67$ million entries, one only need store a $128\times 128$ table of bits. 
 This table, given in Figure~\ref{fig:Parker cocycle}, exhibits several structural regularities that simplify matters further.
 
@@ -409,17 +409,15 @@ The span of the left column of vectors in Example~\ref{example:Golay} is the sub
 
 The top left quadrant of Figure~\ref{fig:Parker cocycle} then contains the restriction of $\theta$ to $V\times V$, and the bottom right quadrant the restriction to $W\times W$. 
 The off-diagonal quadrants contain the values of $\theta$ restricted to $V\times W$ and $W\times V$.
-
-\begin{figure}[ht]
+\begin{figure}[!b]
 \begin{center}
-\includegraphics[width=0.8\textwidth]{alpha_awesum.png}
+\includegraphics[width=0.7\textwidth]{alpha_awesum.png}
 \end{center}
 \caption{The restriction of the code cocycle $\theta$ for Parker's loop to $(V\cup W)^2$. A machine-readable version is available in \cite{RN_GH} or as an %arXiv
-ancillary file. The order of the row/column labels is $\underline{0},b_1,b_2,b_1+b_2,b_3,\ldots, b_1+\cdots +b_6$, $b_7,b_8,b_7+b_8,\ldots,b_7+\cdots + b_{12}$.}
+online supplement to this article. The order of the row/column labels is $\underline{0},b_1,b_2,b_1+b_2,b_3,\ldots, b_1+\cdots +b_6$, $b_7,b_8,b_7+b_8,\ldots,b_7+\cdots + b_{12}$.}
 \label{fig:Parker cocycle}
 \end{figure}
-
-From Figure~\ref{fig:Parker cocycle} and the formula (\ref{eq:loop_extension_prod}) we can see that the restriction $\cP\big|_V$ of Parker's loop is a direct product (hence is a group), as $\theta\big|_{V\times V}$ is identically zero. 
+From Figure~\ref{fig:Parker cocycle} and formula (\ref{eq:loop_extension_prod}) we can see that the restriction $\cP\big|_V$ of Parker's loop is a direct product (hence is a group), as $\theta\big|_{V\times V}$ is identically zero. 
 Moreover, the restriction of $\cP\big|_W$ is isomorphic to the direct product $(\FF_2)^3 \times M$, where $M$ is the Moufang loop from Example~\ref{example:m16}.
 This is because what was a single pixel in Figure~\ref{fig:cocycle for M} is now an $8\times 8$ block of pixels in the lower right quadrant of Figure~\ref{fig:Parker cocycle}.
 
@@ -429,7 +427,7 @@ Parker's loop $\cP$ is an algebraic structure that has spawned a small industry 
 Parker's original treatment of this class of Moufang loops used vector spaces $V$ over $\FF_2$ equipped with a function $V \to \FF_2$ satisfying certain conditions analogous to those in Definition~\ref{def:codeLoop} (see \cite[Definition~13]{Griess}).
 
 Aside from Parker's approach and the description by Griess using code cocycles, there was an unpublished thesis \cite{Johnson}, characterizations as loops with specified commutators and associators \cite{CheinGoodaire}, an iterative construction using centrally twisted products \cite{Hsu}, and a construction using groups with triality \cite{Nagy}. 
-The LOOPS library \cite{LOOPS} for software package GAP \cite{GAP4} contains all the code loops of order $64$ and below, although ``the package is intended primarily for quasigroups and loops of small order, say up to $1000$.''
+The LOOPS library \cite{LOOPS} for the software package GAP \cite{GAP4} contains all the code loops of order $64$ and below, although ``the package is intended primarily for quasigroups and loops of small order, say up to $1000$.''
 Even the more recent \cite{OBrien_Vojtechovsky}, which classifies code loops up to order $512$ in order to add them to the LOOPS package, falls short of the $8192$ elements of Parker's loop; the authors say ``our work suggests that it will be difficult to extend the classification of code loops beyond order $512$.''
 In principle, there is nothing stopping the construction of $\cP$ in LOOPS, but it will essentially be stored as a multiplication table, which would comprise $67\,108\,864$ entries, each of which is a $13$-bit element label.
 The paper \cite{Morier-Genoud_Ovsienko} describes an algebraic formula for a code cocycle that will build Parker's loop, as a combination of the recipe in the proof of Proposition~6.6 and the generating function in Proposition~9.2 appearing there.
@@ -445,9 +443,9 @@ Finally, one can also remark that because of the identity (\ref{eq: code cocycle
 Thus one can describe Parker's loop as being generated by the subloops $(\FF_2)^7$ and $(\FF_2)^3\times M$, with relations coming from the information contained in the bottom left quadrant of Figure~\ref{fig:Parker cocycle}, and the formulas (\ref{eq: code cocycle 2}) and (\ref{eq:theformula}).
 The apparent structure in that bottom left quadrant is intriguing, and perhaps indicative of further simplifications; this will be left to future work.
 
-\newpage
+% \newpage
 
-\begin{algorithm}[!h]
+\begin{algorithm}[!hb]
 \small
 \caption{Reverse-engineered from proof of \cite[Theorem 10]{Griess}.}\label{Griess algo}
 \SetAlgoLined
@@ -504,11 +502,11 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 \end{algorithm}
 
 
-% \begin{acknowledgment}{Acknowledgment.}
-% DMR is supported by the Australian Research Council's Discovery Projects scheme, (project number DP180100383), funded by the Australian Government.
-% \end{acknowledgment}
+\begin{acknowledgment}{Acknowledgment.}
+DMR is supported by the Australian Research Council's Discovery Projects scheme, (project number DP180100383), funded by the Australian Government.
+\end{acknowledgment}
 
-\newpage
+% \newpage
 
 % %% For generating biblography using bibtex
 % %% Needs tweaking due to unofficial .bst file
@@ -548,7 +546,7 @@ Conway, J.~H. (1985).
 
 \bibitem{SPLAG}
 Conway, J.~H., Sloane, N. J.~A. (1999).
-\newblock \emph{Sphere packings, lattices and groups}, 3rd ed. Grundlehren der Mathematischen Wissenschaften, vol. 290.
+\newblock \emph{Sphere Packings, Lattices and Groups}, 3rd ed. Grundlehren der Mathematischen Wissenschaften, vol. 290.
 \newblock New York: Springer-Verlag.
 % \newblock With additional contributions by E. Bannai, R. E. Borcherds, J. Leech, S. P. Norton, A. M. Odlyzko, R. A. Parker, L. Queen and B. B. Venkov.
 
@@ -600,11 +598,10 @@ Moufang, R. (1935).
 \newblock \emph{Math.\ Ann.} 110(1): 416--430.
 \newblock \url{doi.org/10.1007/BF01448037}
 
-\bibitem{RN_GH} %Nagy, B., Roberts, D.~M. %% Uncomment for final
-{[library authors redacted]} (2019).
+\bibitem{RN_GH} Nagy, B., Roberts, D.~M. (2019).
 \newblock \texttt{codeloops} library.
-\newblock Anonymously available from \url{adelaide.figshare.com/s/e1cf101636659583a124} 
-% GitHub repository, (2019) \url{https://github.com/bnagy/codeloops} %% Uncomment for final
+\newblock %Anonymously available from \url{adelaide.figshare.com/s/e1cf101636659583a124} 
+(2019) \url{github.com/bnagy/codeloops} %% Uncomment for final
 
 \bibitem{Nagy}
 Nagy, G.~P. (2008).
@@ -629,19 +626,19 @@ O'Brien, E.~A., Vojt\v{e}chovsk\'{y}, P. (2017).
 
 %% Uncomment this for final version
 
-% \begin{biog}
-% \item[Ben Nagy] is an MPhil.\ candidate at the University of Adelaide, researching computational stylistics for Latin Poetry.
-% \begin{affil}
-% Department of Classics, Archaeology \& Ancient History, The University of Adelaide\\
-% benjamin.nagy@adelaide.edu.au
-% \end{affil}
+\begin{biog}
+\item[Ben Nagy] is an MPhil.\ candidate at the University of Adelaide, researching computational stylistics for Latin Poetry.
+\begin{affil}
+Department of Classics, Archaeology \& Ancient History, The University of Adelaide\\
+benjamin.nagy@adelaide.edu.au
+\end{affil}
 
-% \item[David Michael Roberts] is a mathematician specialising in category theory, geometry and a hodge-podge of other random topics.
-% \begin{affil}
-% School of Mathematical Sciences, The University of Adelaide\\
-% david.roberts@adelaide.edu.au
-% \end{affil}
-% \end{biog}
+\item[David Michael Roberts] is a mathematician specialising in category theory, geometry and a hodge-podge of other random topics.
+\begin{affil}
+School of Mathematical Sciences, The University of Adelaide\\
+david.roberts@adelaide.edu.au
+\end{affil}
+\end{biog}
 \vfill\eject
 
 \end{document}
