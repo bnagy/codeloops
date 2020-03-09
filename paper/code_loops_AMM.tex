@@ -339,7 +339,7 @@ As part of \cite[Theorem 10]{Griess}, Griess proves that all code cocycles for a
 \section{Griess's algorithm and its output.}
 
 The algorithm that Griess describes in the proof of \cite[Theorem 10]{Griess} to construct code cocycles for a code $\cC$ takes as input an ordered  basis $\{b_0,\ldots,b_{k-1}\}$ for $\cC$. 
-A code cocycle is then built up inductively over larger and larger subspaces $V_i = \Span\{b_1,\ldots,b_i\}$.
+A code cocycle is then built up inductively over larger and larger subspaces $V_i = \Span\{b_0,\ldots,b_i\}$.
 
 However, the description by Griess is more of an outline, using steps like ``determine the cocycle on such-and-such subset using identity X,'' where X refers to one of (\ref{eq: code cocycle 1}), (\ref{eq: code cocycle 2}), (\ref{eq: code cocycle 3}), or corollaries of these. We have reconstructed the process in detail in Algorithm~\ref{Griess algo}.
 
@@ -495,6 +495,7 @@ $\theta(b_0,b_0) \leftarrow \tfrac14\left|b_0\right|$\;
 
 \begin{acknowledgment}{Acknowledgment.}
 DMR is supported by the Australian Research Council's Discovery Projects scheme, (project number DP180100383), funded by the Australian Government.
+The authors thank an anonymous referee for telling us of Coxeter's example and clarifying the details of Parker's construction.
 \end{acknowledgment}
 
 \begin{thebibliography}{10}
