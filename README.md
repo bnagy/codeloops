@@ -2,7 +2,9 @@
 
 ## About
 
-`codeloops` is initial maths research code to implement code loops as extensions of doubly even binary codes. For further details, consult the [paper](paper/README.md).
+`codeloops` is initial maths research code to implement code loops as extensions of doubly even binary codes. For further details, consult the [preprint](paper/README.md).
+
+Paper is forthcoming in American Mathematical Monthly, this will be the [DOI](https://doi.org/10.1080/00029890.2021.1852047).
 
 ## Installation
 
