@@ -2,9 +2,13 @@
 
 ## About
 
-`codeloops` is initial maths research code to implement code loops as extensions of doubly even binary codes. For further details, consult the [preprint](https://arxiv.org/abs/1903.02748).
+`codeloops` is initial maths research code to implement code loops as extensions of doubly even binary codes. For further details, consult the [arXiv preprint](https://arxiv.org/abs/1903.02748), or the paper itself.
 
-Paper is forthcoming in American Mathematical Monthly, this will be the [DOI](https://doi.org/10.1080/00029890.2021.1852047).
+The paper has appeared as:
+
+*  Ben Nagy & David Michael Roberts _(Re)constructing Code Loops_, The American Mathematical Monthly  **128** issue 2 (2021) 151-161, doi:[10.1080/00029890.2021.1852047](https://doi.org/10.1080/00029890.2021.1852047), [arXiv:1903.02748](https://arxiv.org/abs/1903.02748).
+
+You can grab the `.bib` file for the paper [here](Nagy-Roberts-2021.bib).
 
 ## Installation
 
